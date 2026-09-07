@@ -16,6 +16,7 @@ import {
   DialogFooter
 } from "@fluentui/react";
 import { RichText } from "@pnp/spfx-controls-react/lib/RichText";
+import { customDropdownStyles, customPickerStyles, formStyles } from '../../../common/styles/controlStyles';
 
 
 interface IFormData {
@@ -70,7 +71,6 @@ export default function SiteOverview(props: ISiteOverviewProps): React.ReactElem
   const [showDialog, setShowDialog] = useState(false);
 const [isErrorDialog, setIsErrorDialog] = useState(false);
 const [redirectUrl, setRedirectUrl] = useState("");
-
 
   const formTopRef = React.useRef<HTMLDivElement>(null);
   const spService = new SpService(props.context);
@@ -1136,13 +1136,8 @@ useEffect(() => {
       <div ref={formTopRef} />
       <div
         style={{
-          background: "#fff",
-          //border: "1px solid #e1dfdd",
-          //borderRadius: "4px",
-          padding: "0 10rem",
-          marginTop:'10px'
-          //maxWidth: "1100px",
-          //margin: "0 auto"
+          marginTop:'10px',
+          width: '85%'
         }}
       >
         {/* View Sites */}
@@ -1161,6 +1156,7 @@ useEffect(() => {
                 void loadSites(value, isAdmin);
 
               }}
+              styles={formStyles.dropdown}
 
             />
           </div>
@@ -1198,7 +1194,8 @@ useEffect(() => {
             <TextField
               value={siteNumber}
               readOnly
-              disabled={!!selectedSiteId}
+              // disabled={!!selectedSiteId}
+              styles={formStyles.readOnlyField}
             />
           </div>
         </div>
@@ -1224,6 +1221,7 @@ useEffect(() => {
                   onChange={(_, value) =>
                     field.onChange(value)
                   }
+                  styles={formStyles.textField}
                 />
               )}
             />
@@ -1262,6 +1260,7 @@ useEffect(() => {
 
                       field.onChange(items);
                     }}
+                    styles={customPickerStyles}
                   />
 
                   {errors.siteLead && (
@@ -1300,6 +1299,7 @@ useEffect(() => {
 
                 //field.onChange(items);
               }}
+                styles={customPickerStyles}
             />
           </div>
         </div>
@@ -1322,6 +1322,7 @@ useEffect(() => {
                 setSiteUpdateOwnerUsers(items);
                 //field.onChange(items);
               }}
+                styles={customPickerStyles}
             />
           </div>
         </div>
@@ -1345,7 +1346,6 @@ useEffect(() => {
               >
 
                 <Dropdown
-                  styles={{ root: { flex: 1 } }}
                   options={contactsOptions}
                   selectedKey={row.support}
                   placeholder="Select Name"
@@ -1356,10 +1356,17 @@ useEffect(() => {
                       option?.key
                     )
                   }
+                   styles={{ 
+                    ...formStyles.dropdown, 
+                    root: { 
+                      ...(formStyles.dropdown as any).root, 
+                      flex: 1 
+                    } 
+                  }}
+
                 />
 
-                <Dropdown
-                  styles={{ root: { width: 200 } }}
+                <Dropdown                  
                   options={roleOptions}
                   selectedKey={row.role}
                   placeholder="Select Role"
@@ -1370,6 +1377,13 @@ useEffect(() => {
                       option?.key
                     )
                   }
+                  styles={{ 
+                    ...formStyles.dropdown, 
+                    root: { 
+                      ...(formStyles.dropdown as any).root, 
+                      width: 200 
+                    } 
+                  }}
                 />
 
                 <IconButton
@@ -1420,6 +1434,7 @@ useEffect(() => {
                   onChange={(_, option) =>
                     field.onChange(option?.key)
                   }
+                  styles={formStyles.dropdown}
                 />
               )}
             />
@@ -1443,6 +1458,7 @@ useEffect(() => {
                   onChange={(_, value) =>
                     field.onChange(value)
                   }
+                   styles={formStyles.textField}
                 />
               )}
             />
@@ -1466,6 +1482,7 @@ useEffect(() => {
                   onChange={(_, value) =>
                     field.onChange(value)
                   }
+                  styles={formStyles.textField}
                 />
               )}
             />
@@ -1487,7 +1504,7 @@ useEffect(() => {
                 required: "Country is required"
               }}
               render={({ field }) => (
-                <Dropdown
+                <ComboBox
                   options={countryOptions}
                   placeholder="Select Country"
                   selectedKey={field.value}
@@ -1495,6 +1512,7 @@ useEffect(() => {
                   onChange={(_, option) =>
                     field.onChange(option?.key)
                   }
+                  styles={formStyles.dropdown}
                 />
               )}
             />
@@ -1525,6 +1543,7 @@ useEffect(() => {
                   onChange={(_, option) =>
                     field.onChange(option?.key)
                   }
+                  styles={formStyles.dropdown}
                 />
               )}
             />
@@ -1555,6 +1574,7 @@ useEffect(() => {
                   onChange={(_, option) =>
                     field.onChange(option?.key)
                   }
+                  styles={formStyles.dropdown}
                 />
               )}
             />
@@ -1585,6 +1605,7 @@ useEffect(() => {
                   onChange={(_, option) =>
                     field.onChange(option?.key)
                   }
+                  styles={formStyles.dropdown}
                 />
               )}
             />
@@ -1621,6 +1642,7 @@ useEffect(() => {
                       errorMessage={
                         errors.obligationType?.message
                       }
+                      styles={formStyles.dropdown}
                     />
                   )}
                 />
@@ -1655,6 +1677,7 @@ useEffect(() => {
                       errorMessage={
                         errors.operatingGroup?.message
                       }
+                      styles={formStyles.dropdown}
                     />
                   )}
                 />
@@ -1722,7 +1745,8 @@ useEffect(() => {
                 <TextField
                   value={field.value ? moment(field.value).format("MM-DD-YYYY") : ""}
                   readOnly
-                  disabled={!!selectedSiteId}
+                 // disabled={!!selectedSiteId}
+                  styles={formStyles.readOnlyField}
                 />
               )}
             />
@@ -1753,6 +1777,7 @@ useEffect(() => {
                   onChange={(_, option) =>
                     field.onChange(option?.key)
                   }
+                  styles={formStyles.dropdown}
                 />
               )}
             />
@@ -1783,6 +1808,7 @@ useEffect(() => {
                   onChange={(_, value) =>
                     field.onChange(value)
                   }
+                   styles={formStyles.multilineField}
                 />
               )}
             />
