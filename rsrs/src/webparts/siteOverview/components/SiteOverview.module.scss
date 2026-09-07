@@ -1,0 +1,88 @@
+@import 'pkg:@fluentui/react/dist/sass/References.scss';
+
+.siteOverview {
+  padding: 20px 20px 120px;
+    display: grid;
+    row-gap: 20px;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    width: 100vw;
+    z-index: 100;
+  /* overflow: hidden;
+  padding: 1em; */
+  color: "[theme:bodyText, default: #323130]";
+  color: var(--bodyText);
+  &.teams {
+    font-family: $ms-font-family-fallbacks;
+  }
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #edebe9; // subtle divider line
+ // margin-bottom: 2rem;
+}
+:global(.ms-RichTextField-field) {
+  min-height: 150px;
+}
+.label{
+  width: 250px;
+   font-weight: bold;
+  align-items: center;
+  text-align: right;
+  padding-right: 2rem;
+  white-space: nowrap;
+}
+
+/* Icon */
+.icon {
+  color: #0078d4; // Fluent UI blue
+  font-size: 20px;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  font-family: sans-serif;
+  color: #106ebe; // slightly darker blue for text
+}
+
+.welcome {
+  text-align: center;
+}
+
+.welcomeImage {
+  width: 100%;
+  max-width: 420px;
+}
+.cardStyle{
+  background:  #ffffff;
+  
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  margin-bottom: 20px;
+  box-sizing: border-box as const;
+  //'border-box' as const,
+  //bottom
+  //borderBottom: '4px solid #125D9A',
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.links {
+  a {
+    text-decoration: none;
+    color: "[theme:link, default:#03787c]";
+    color: var(--link); // note: CSS Custom Properties support is limited to modern browsers only
+
+    &:hover {
+      text-decoration: underline;
+      color: "[theme:linkHovered, default: #014446]";
+      color: var(--linkHovered); // note: CSS Custom Properties support is limited to modern browsers only
+    }
+  }
+}

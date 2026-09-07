@@ -1,0 +1,132 @@
+@import 'pkg:@fluentui/react/dist/sass/References.scss';
+
+.outsideCounselUpdates {
+   padding: 20px 20px 120px;
+    display: grid;
+    row-gap: 20px;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    width: 100vw;
+    z-index: 100;
+  /* overflow: hidden;
+  padding: 1em; */
+  color: "[theme:bodyText, default: #323130]";
+  color: var(--bodyText);
+  &.teams {
+    font-family: $ms-font-family-fallbacks;
+  }
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0px 16px 10px;
+  border-bottom: 2px solid #edebe9; // subtle divider line
+  //margin-bottom: 1rem;
+}
+.icon {
+  color: #0078d4; // Fluent UI blue
+  font-size: 20px
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  font-family: sans-serif;
+  color: #106ebe; // slightly darker blue for text
+}
+
+/* .header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-top: 4px solid #00a2ed;
+  border-bottom: 1px solid #d9d9d9;
+} */
+
+
+
+.title {
+  font-size: 20px;
+  color: #4472c4;
+}
+
+.formContainer {
+  width: fit-content;
+  margin: 1rem auto;
+}
+.exportBtnRow {
+  margin-top: 50px;
+  margin-left: 255px;
+}
+.ms-Button ms-Button--primary root-229{
+  border-radius: .4rem !important;
+}
+
+
+.row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.label {
+  width: 250px;
+  text-align: right;
+  font-weight: bold;
+  margin-right: 20px;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 25px;
+}
+
+.dropdown {
+  width: 320px;
+  height: 34px;
+  margin-right: 15px;
+}
+
+
+.secondaryButton {
+  background: white;
+  border: 1px solid #ccc;
+  padding: 8px 22px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.buttonRow {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+ // margin-top: 50px;
+}
+
+
+.welcome {
+  text-align: center;
+}
+
+.welcomeImage {
+  width: 100%;
+  max-width: 420px;
+}
+
+.links {
+  a {
+    text-decoration: none;
+    color: "[theme:link, default:#03787c]";
+    color: var(--link); // note: CSS Custom Properties support is limited to modern browsers only
+
+    &:hover {
+      text-decoration: underline;
+      color: "[theme:linkHovered, default: #014446]";
+      color: var(--linkHovered); // note: CSS Custom Properties support is limited to modern browsers only
+    }
+  }
+}

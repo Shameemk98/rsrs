@@ -1,0 +1,159 @@
+@import 'pkg:@fluentui/react/dist/sass/References.scss';
+
+.newSiteRequestsDashboard {
+  overflow: hidden;
+  padding: 1em;
+  color: "[theme:bodyText, default: #323130]";
+  color: var(--bodyText);
+  &.teams {
+    font-family: $ms-font-family-fallbacks;
+  }
+}
+
+.welcome {
+  text-align: center;
+}
+
+.welcomeImage {
+  width: 100%;
+  max-width: 420px;
+}
+/* Header Container */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.8rem 0rem;
+  border-bottom: 1px solid #edebe9; // subtle divider line
+}
+.requestLink {
+  color: #0c86e4;
+  text-decoration: none; // no underline
+  cursor: pointer;
+}
+
+.requestLink:hover {
+  text-decoration: underline; // underline on hover only
+}
+
+.requestLink:visited {
+  color: #4b56bd !important;
+}
+
+
+/* Icon */
+.icon {
+  color: #0078d4; // Fluent UI blue
+  font-size: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  font-family: sans-serif;
+  color: #106ebe; // slightly darker blue for text
+}
+
+.listContainer {
+  padding: 16px;
+}
+
+/* .searchContainer {
+  padding: 10px 16px;
+  
+} */
+
+.searchContainer :global(.ms-SearchBox) {
+  border: 2px solid red; 
+}
+/* Base */
+.statusDefault {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Approved (Green) */
+.statusApproved {
+  @extend .statusDefault;
+  background-color: #dff6dd;
+  color: #107c10;
+}
+
+/* Pending (Orange) */
+.statusPending {
+  @extend .statusDefault;
+  background-color: #fff4ce;
+  color: #b45309;
+}
+
+/* Rejected (Red) */
+.statusRejected {
+  @extend .statusDefault;
+  background-color: #fde7e9;
+  color: #a4262c;
+}
+
+
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+
+  /* button {
+    padding: 6px 12px;
+    border: 1px solid #0078d4;
+    background: white;
+    color: #0078d4;
+    cursor: pointer;
+  } */
+
+  button:disabled {
+    opacity: 0.5;
+  }
+}
+
+/* Status styles */
+.statusDefault {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* Green */
+.statusApproved {
+  @extend .statusDefault;
+  background: #dff6dd;
+  color: #107c10;
+}
+
+/* Orange */
+.statusPending {
+  @extend .statusDefault;
+  background: #fff4ce;
+  color: #b45309;
+}
+
+/* Red */
+.statusRejected {
+  @extend .statusDefault;
+  background: #fde7e9;
+  color: #a4262c;
+}
+
+
+.links {
+  a {
+    text-decoration: none;
+    color: "[theme:link, default:#03787c]";
+    color: var(--link); // note: CSS Custom Properties support is limited to modern browsers only
+
+    &:hover {
+      text-decoration: underline;
+      color: "[theme:linkHovered, default: #014446]";
+      color: var(--linkHovered); // note: CSS Custom Properties support is limited to modern browsers only
+    }
+  }
+}

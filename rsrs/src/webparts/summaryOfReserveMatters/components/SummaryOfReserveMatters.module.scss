@@ -1,0 +1,149 @@
+@import 'pkg:@fluentui/react/dist/sass/References.scss';
+
+.summaryOfReserveMatters {
+ // padding: 10px 20px;
+row-gap: 8px;
+  padding: 20px 20px 120px;
+    display: grid;
+   // row-gap: 20px;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    width: 100vw;
+    z-index: 100;
+ // overflow: hidden;
+ // padding: 1em;
+  color: "[theme:bodyText, default: #323130]";
+  color: var(--bodyText);
+  &.teams {
+    font-family: $ms-font-family-fallbacks;
+  }
+}
+
+.welcome {
+  text-align: center;
+}
+
+.welcomeImage {
+  width: 100%;
+  max-width: 420px;
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #edebe9; // subtle divider line
+}
+
+/* Icon */
+.icon {
+  color: #0078d4; // Fluent UI blue
+  font-size: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  font-family: sans-serif;
+  color: #106ebe; // slightly darker blue for text
+}
+.searchContainer {
+  padding: 10px 16px;
+}
+.activity{
+  display: flex;
+  align-items: center;
+  gap:10px;
+ // margin: 1rem 0rem;
+  justify-content: center;
+  margin: 0.5rem 0;
+
+
+}
+.activitylabel{
+font-weight: 700;
+}
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px;
+
+ /*  button {
+    padding: 6px 14px;
+    border: 1px solid #0078d4;
+    background: white;
+    color: #0078d4;
+    cursor: pointer;
+    border-radius: 4px;
+  } */
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+ // margin: 12px 0;
+}
+
+.searchBox {
+  width: 80%;
+
+  :global(.ms-SearchBox) {
+    border: 1px solid #c8c6c4;
+    border-radius: 4px;
+    height: 36px;
+  }
+}
+
+/* .exportBtn {
+  background-color: #107c10;
+  color: white;
+  border: none;
+  width: 19%;
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }  
+  
+} */
+ .exportBtn {
+   background-color: #107c10;
+  color: white;
+  border: none;
+  width: 19%;
+}
+
+.exportBtn:global(.is-disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+ // background-color: #565c56;
+}
+
+.searchContainer :global(.ms-SearchBox) {
+  border: 2px solid red; 
+}
+
+
+.links {
+  a {
+    text-decoration: none;
+    color: "[theme:link, default:#03787c]";
+    color: var(--link); // note: CSS Custom Properties support is limited to modern browsers only
+
+    &:hover {
+      text-decoration: underline;
+      color: "[theme:linkHovered, default: #014446]";
+      color: var(--linkHovered); // note: CSS Custom Properties support is limited to modern browsers only
+    }
+  }
+}

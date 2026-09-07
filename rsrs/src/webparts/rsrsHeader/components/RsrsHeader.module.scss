@@ -1,0 +1,55 @@
+.headerContainer {
+  background: linear-gradient(
+    90deg,
+    #1599e5 0%,
+    #1aa5e8 50%,
+    #1194dc 100%
+  );
+
+  border-radius: 12px;
+  padding: 16px 24px;
+  color: white;
+
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.logo {
+  height: 48px;
+}
+
+.title {
+  color: white !important;
+  font-weight: 600;
+}
+
+.quarterButton {
+
+  margin-top: 8px;
+
+  background: rgba(255,255,255,.15);
+
+  border: none;
+  color: white;
+
+  :global(.ms-Button-label) {
+    color: white;
+  }
+
+  :global(i) {
+    color: white;
+  }
+}
+
+.settingsButton {
+  color: white;
+}
+
+/* :global(.ms-Persona-primaryText) {
+  color: white !important;
+}
+
+:global(.ms-Persona-secondaryText) {
+  color: #d9e8ff !important;
+} */
+

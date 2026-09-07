@@ -1,0 +1,64 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "request-new-site-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/requestNewSite/RequestNewSiteWebPart.js",
+          "manifest": "./src/webparts/requestNewSite/RequestNewSiteWebPart.manifest.json"
+        }
+      ]
+    },
+    "site-overview-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/siteOverview/SiteOverviewWebPart.js",
+          "manifest": "./src/webparts/siteOverview/SiteOverviewWebPart.manifest.json"
+        }
+      ]
+    },
+    "new-site-requests-dashboard-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/newSiteRequestsDashboard/NewSiteRequestsDashboardWebPart.js",
+          "manifest": "./src/webparts/newSiteRequestsDashboard/NewSiteRequestsDashboardWebPart.manifest.json"
+        }
+      ]
+    },
+    "query-filter-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/queryFilter/QueryFilterWebPart.js",
+          "manifest": "./src/webparts/queryFilter/QueryFilterWebPart.manifest.json"
+        }
+      ]
+    },
+    "summary-of-reserve-matters-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/summaryOfReserveMatters/SummaryOfReserveMattersWebPart.js",
+          "manifest": "./src/webparts/summaryOfReserveMatters/SummaryOfReserveMattersWebPart.manifest.json"
+        }
+      ]
+    },
+    "outside-counsel-updates-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/outsideCounselUpdates/OutsideCounselUpdatesWebPart.js",
+          "manifest": "./src/webparts/outsideCounselUpdates/OutsideCounselUpdatesWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "RequestNewSiteWebPartStrings": "lib/webparts/requestNewSite/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js",
+    "SiteOverviewWebPartStrings": "lib/webparts/siteOverview/loc/{locale}.js",
+    "NewSiteRequestsDashboardWebPartStrings": "lib/webparts/newSiteRequestsDashboard/loc/{locale}.js",
+    "QueryFilterWebPartStrings": "lib/webparts/queryFilter/loc/{locale}.js",
+    "SummaryOfReserveMattersWebPartStrings": "lib/webparts/summaryOfReserveMatters/loc/{locale}.js",
+    "OutsideCounselUpdatesWebPartStrings": "lib/webparts/outsideCounselUpdates/loc/{locale}.js"
+  }
+}

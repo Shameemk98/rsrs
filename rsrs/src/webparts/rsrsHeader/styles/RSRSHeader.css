@@ -1,0 +1,13 @@
+#spSiteHeader,#sp-appBar,#spCommandBar,#SuiteNavPlaceholder,#CommentsWrapper,#spLeftNav{
+    display: none !important;
+  }
+.ControlZone{
+  margin:0 !important;
+  padding: o !important;
+}
+.ms-PickerPersona-container .ms-PeoplePicker-personaContent{
+  background-color: #0078D4 !important;
+}
+.CanvasZoneSectionContainer {
+  margin: auto !important;
+}
