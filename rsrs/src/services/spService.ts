@@ -157,6 +157,37 @@ public async getPagedItems(
       //.select('*', 'SiteLead/Id','SiteLead/Title','SiteSupport/Id','SiteSupport/Title','SiteUpdateOwner/Id','SiteUpdateOwner/Title')
       .expand('SiteLead','SiteSupport','SiteUpdateOwner','Author')();
   }
+  private readonly itemSelectFields = [
+    "*",
+    "SiteLead/Id",
+    "SiteLead/Title",
+    // "SiteLead/EMail",
+    "SiteSupport/Id",
+    "SiteSupport/Title",
+    // "SiteSupport/EMail",
+    "SiteUpdateOwner/Id",
+    "SiteUpdateOwner/Title",
+    // "SiteUpdateOwner/EMail",
+    "Author/Title",
+  ];
+
+  private readonly itemExpandFields = [
+    "SiteLead",
+    "SiteSupport",
+    "SiteUpdateOwner",
+    "Author",
+  ];
+
+  public async getListItemById(
+    listTitle: string,
+    id: number
+  ): Promise<any> {
+    return this.sp.web.lists
+      .getByTitle(listTitle)
+      .items.getById(id)
+      .select(...this.itemSelectFields)
+      .expand(...this.itemExpandFields)();
+  }
 
 
   /* ================= NAVIGATION ================= */
@@ -1180,7 +1211,7 @@ public async getQuarterReview(context: any) {
       "SiteID",
       "AdditionalContact"
     )
-    .filter("IsActive eq 1")
+    .filter("IsActive eq true")
     .top(5000)();
 
   const additionalSupportMap: any = {};

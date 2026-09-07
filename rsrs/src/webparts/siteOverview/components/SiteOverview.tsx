@@ -1,7 +1,7 @@
 import * as React from 'react';
 import styles from './SiteOverview.module.scss';
 import type { ISiteOverviewProps } from './ISiteOverviewProps';
-import { DatePicker, DefaultButton, Dropdown, Icon, IconButton, IDropdownOption, Link, PrimaryButton, Spinner, SpinnerSize, Stack, TextField } from '@fluentui/react';
+import { ComboBox, DatePicker, DefaultButton, Dropdown, Icon, IconButton, IDropdownOption, Link, PrimaryButton, Spinner, SpinnerSize, Stack, TextField } from '@fluentui/react';
 import { Controller, useForm } from 'react-hook-form';
 import { PeoplePicker } from '@pnp/spfx-controls-react/lib/PeoplePicker';
 import { SpService } from '../../../services/spService';
@@ -109,6 +109,16 @@ const [redirectUrl, setRedirectUrl] = useState("");
     );
 
   };
+const parseHtmlToPlainText = (html: string): string => {
+  if(html)
+  {
+  return html
+      .replace(/<\/p><p>/gi, '\n')      // Turn separate paragraphs into line breaks
+      .replace(/<br\s*\/?>/gi, '\n')    // Turn explicit <br> tags into line breaks
+      .replace(/<\/?[^>]+(>|$)/g, ''); 
+  }
+  else return ""
+};
 const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
 
   const hasSiteUpdateOwner =
@@ -145,14 +155,40 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
         setMessage("Please select a site.");
         setMessageType(MessageBarType.warning);
         return;
-      } 2
-      console.log(siteLeadUsers, "siteLeadUsers");
-      console.log(siteSupportUsers, "siteSupportUsers");
-      console.log(siteUpdateOwnerUsers, "siteUpdateOwnerUsers");
-      const siteLeadUser = siteLeadUsers?.length > 0 ? await spService.ensureUser(siteLeadUsers[0].EMail || siteLeadUsers[0].secondaryText) : null;
-      const siteSupportUser = siteSupportUsers?.length > 0 ? await spService.ensureUser(siteSupportUsers[0].EMail || siteSupportUsers[0].secondaryText) : null;
-      const siteUpdateOwnerUser = siteUpdateOwnerUsers?.length > 0 ? await spService.ensureUser(siteUpdateOwnerUsers[0].EMail || siteUpdateOwnerUsers[0].secondaryText) : null;
+      }
+      // const siteLeadUser = siteLeadUsers?.length > 0 ? await spService.ensureUser(siteLeadUsers[0].EMail || siteLeadUsers[0].secondaryText) : null;
+      // const siteSupportUser = siteSupportUsers?.length > 0 ? await spService.ensureUser(siteSupportUsers[0].EMail || siteSupportUsers[0].secondaryText) : null;
+      // const siteUpdateOwnerUser = siteUpdateOwnerUsers?.length > 0 ? await spService.ensureUser(siteUpdateOwnerUsers[0].EMail || siteUpdateOwnerUsers[0].secondaryText) : null;
+      const getUserId = async (user: any): Promise<number | null> => {
+        if (!user) return null;
+        if (user.Id) {
+          return user.Id;
+        }
 
+        // PeoplePicker user, resolve to SharePoint ID
+        const ensuredUser = await spService.ensureUser(
+          user.EMail ||
+          user.secondaryText ||
+          user.loginName
+        );
+
+        return ensuredUser?.Id?? null;
+      };
+
+      const siteLeadUserId =
+        siteLeadUsers?.length > 0
+          ? await getUserId(siteLeadUsers[0])
+          : null;
+
+      const siteSupportUserId =
+        siteSupportUsers?.length > 0
+          ? await getUserId(siteSupportUsers[0])
+          : null;
+
+      const siteUpdateOwnerUserId =
+        siteUpdateOwnerUsers?.length > 0
+          ? await getUserId(siteUpdateOwnerUsers[0])
+          : null;
       const payload: any = {
 
         RSRSSiteName: data.siteName,
@@ -165,14 +201,15 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
         Legacy_Company: legacyCompaniesOptions.find(x => x.key === data.legacyCompany)?.text || "",
         Cost_Estimate_Method: costEstimateMethodOptions.find(x => x.key === data.costEstimateMethod)?.text || "",
         OriginalCompanyConnection: data.originalCompanyConnection,
-        SiteLeadId: siteLeadUser?.Id ? [siteLeadUser.Id] : [],
-        SiteSupportId: siteSupportUser?.Id ? [siteSupportUser?.Id] : [],
-        SiteUpdateOwnerId: siteUpdateOwnerUser?.Id ? [siteUpdateOwnerUser?.Id] : [],
+        // SiteLeadId: siteLeadUser?.Id ? [siteLeadUser.Id] : [],
+        // SiteSupportId: siteSupportUser?.Id ? [siteSupportUser?.Id] : [],
+        // SiteUpdateOwnerId: siteUpdateOwnerUser?.Id ? [siteUpdateOwnerUser?.Id] : [],
+        SiteLeadId: siteLeadUserId?[siteLeadUserId]:[],
+        SiteSupportId: siteSupportUserId?[siteSupportUserId]:[],
+        SiteUpdateOwnerId: siteUpdateOwnerUserId?[siteUpdateOwnerUserId]:[],
 
       };
-      console.log(siteLeadUser, "siteLeadUser");
-      console.log(siteLeadUsers, "siteLeadUserssssss");
-      console.log(payload, "payloadpayloadeee");
+      console.log(payload, "payloadpayload");
 
       if (data.claimType === "Indemnification") {
 
@@ -494,7 +531,6 @@ const handleUpdateClick = async (): Promise<void> => {
       ],
       `SiteIDId eq ${requestId}`
     );
-    console.log(items, "addiitionalsupportttt");
 
 
     if (items.length > 0) {
@@ -525,12 +561,11 @@ const handleUpdateClick = async (): Promise<void> => {
     try {
 
       const site =
-        await spService.getItemByIdd(
+        await spService.getListItemById(
           props.SiteListName,
           siteId
         );
       setSiteNumber(site.Title);
-      console.log(site, "sitesitesitesite");
       setSiteLeadUsers(site.SiteLead || []);
 
       setSiteSupportUsers(
@@ -881,8 +916,22 @@ const loadSites = async (
 
 
 
-  const initialize = async (): Promise<void> => {
+  // const initialize = async (): Promise<void> => {
 
+  //   const admin = await loadUserSecurity();
+
+  //   await Promise.all([
+  //     loadCountries(),
+  //     loadSiteTypes(),
+  //     loadLegacyCompanies(),
+  //     loadOperatingGroups(),
+  //     loadContacts()
+  //   ]);
+
+  //   await loadSites("all", admin);
+
+  // };
+  const initialize = async (): Promise<void> => {
     const admin = await loadUserSecurity();
 
     await Promise.all([
@@ -893,9 +942,26 @@ const loadSites = async (
       loadContacts()
     ]);
 
-    await loadSites("all", admin);
-
+    setIsAdmin(admin);
   };
+  useEffect(() => {
+    if (
+      countryOptions.length > 0 &&
+      siteTypeOptions.length > 0 &&
+      legacyCompaniesOptions.length > 0 &&
+      operatingGroupOptions.length > 0&&
+      contactsOptions.length>0
+    ) {
+      void loadSites("all", isAdmin);
+    }
+  }, [
+    countryOptions,
+    siteTypeOptions,
+    legacyCompaniesOptions,
+    operatingGroupOptions,
+    contactsOptions,
+    isAdmin
+  ]);
   useEffect(() => {
     void initialize();
     const currentUserEmail = props.context.pageContext.user.email;
@@ -904,16 +970,6 @@ const loadSites = async (
     console.log(props.context.pageContext.legacyPageContext.userId, "props.context.pageContext.legacyPageContext.userId");
 
   }, []);
-  /* useEffect(() => {
-    if (message) {
-    
-      const timer = setTimeout(() => {
-        setMessage("");
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [message]); */
   useEffect(() => {
   const params = new URLSearchParams(window.location.search);
 
@@ -1001,16 +1057,17 @@ useEffect(() => {
     <Dialog
   hidden={!showDialog}
   dialogContentProps={{
-    type: DialogType.normal,
-    title: isErrorDialog ? "Error" : "Success"
+    type: DialogType.largeHeader,
+    title: isErrorDialog ? "Error" : "Success",
+    subText:message
   }}
 >
-  <MessageBar
+  {/* <MessageBar
     messageBarType={messageType}
     isMultiline={true}
   >
     {message}
-  </MessageBar>
+  </MessageBar> */}
 
   <DialogFooter>
     <PrimaryButton
@@ -1083,6 +1140,7 @@ useEffect(() => {
           //border: "1px solid #e1dfdd",
           //borderRadius: "4px",
           padding: "0 10rem",
+          marginTop:'10px'
           //maxWidth: "1100px",
           //margin: "0 auto"
         }}
@@ -1116,7 +1174,7 @@ useEffect(() => {
           </div>
 
           <div style={{ flex: 1 }}>
-              <Dropdown
+              <ComboBox
                 options={jumpSiteOptions}
                 selectedKey={selectedSiteId}
                 onChange={(_, option) => {
@@ -1195,7 +1253,7 @@ useEffect(() => {
                     personSelectionLimit={1}
                      defaultSelectedUsers={
                       siteLeadUsers.map(
-                        (u: any) => u.EMail || u.secondaryText
+                        (u: any) => u.secondaryText?u.secondaryText: u.Title
                       )
                     } 
                     onChange={(items) => {
@@ -1235,7 +1293,7 @@ useEffect(() => {
               context={peoplePickerContext}
               personSelectionLimit={1}
               placeholder='Enter a Name Or Email'
-              defaultSelectedUsers={siteSupportUsers.map((u: any) => u.EMail || u.secondaryText)}
+              defaultSelectedUsers={siteSupportUsers.map((u: any) =>u.secondaryText?u.secondaryText: u.Title)}
               onChange={(items) => {
                 setSiteSupportUsers(items);
                 console.log(items,"setSiteSupportUsers");
@@ -1258,7 +1316,7 @@ useEffect(() => {
               context={peoplePickerContext}
               personSelectionLimit={1}
               placeholder='Enter a Name Or Email'
-              defaultSelectedUsers={siteUpdateOwnerUsers.map((u: any) => u.EMail || u.secondaryText)}
+              defaultSelectedUsers={siteUpdateOwnerUsers.map((u: any) => u.secondaryText?u.secondaryText: u.Title)}
               //defaultSelectedUsers={siteUpdateOwnerUsers}
               onChange={(items) => {
                 setSiteUpdateOwnerUsers(items);
@@ -1720,7 +1778,7 @@ useEffect(() => {
                 <TextField
                   multiline
                   rows={6}
-                  value={field.value}
+                  value={parseHtmlToPlainText(field.value)}
                   errorMessage={errors.originalCompanyConnection?.message}
                   onChange={(_, value) =>
                     field.onChange(value)

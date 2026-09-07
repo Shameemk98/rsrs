@@ -730,7 +730,7 @@ const validateUpdateOwnerOrOutsideCounsel = (
         sitePayload.SiteUpdateOwnerId = [
           siteUpdateOwnerUser.Id
         ];
-      }
+      }   
 
       const site =
         await spService.createItem(
@@ -1700,14 +1700,23 @@ const handleCreateClick = (): void => {
                   Site Support :
                 </td>
                 <td className={styles.fieldCell}>
-                  <PeoplePicker
-                    placeholder='Enter a name or email address'
-                    context={peoplePickerContext}
-                    personSelectionLimit={1}
-                    disabled={isReadOnly}
-                    defaultSelectedUsers={defaultSiteSupport}
-                    principalTypes={[PrincipalType.User]}
-                    onChange={(items: any) => { setSiteSupport(items); }}
+                  <Controller
+                    name="siteSupport"
+                    control={control}
+                    render={({ field }) => (
+                      <PeoplePicker
+                        placeholder='Enter a name or email address'
+                        context={peoplePickerContext}
+                        personSelectionLimit={1}
+                        disabled={isReadOnly}
+                        defaultSelectedUsers={defaultSiteSupport}
+                        principalTypes={[PrincipalType.User]}
+                        onChange={(items) => {
+                          field.onChange(items);
+                          setSiteSupport(items);
+                        }}
+                      />
+                    )}
                   />
                 </td>
               </tr>}
