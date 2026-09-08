@@ -111,13 +111,13 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
         siteactivity: item.Site_Activity,
         siteType: item.Site_Type,
         claimType: item.Claim_Type,
-        totalProjectCost: total === 0 ? 0 : total.toFixed(2),
-        totalspendingtodate: spent === 0 ? 0 : spent.toFixed(2),
-        reservebalance: rb === 0 ? 0 : rb.toFixed(2),
-        betflag: update?.BETFlag === "true" ? "Yes" : update?.BETFlag === "false" ? "No" : "",
+        totalProjectCost: total,
+        totalspendingtodate: spent,
+        reservebalance: rb,
         totalbetcost: update?.TotalBETCost || 0,
         betdifference: update?.BETDiffrence || 0,
         betdifferencepercent: update?.BETDiffrencePercentage || 0,
+        betflag: update?.BETFlag === "true" ? "Yes" : update?.BETFlag === "false" ? "No" : "",
         datesiteadded: item.DateSiteAdded ? item.DateSiteAdded.split("T")[0] : "",
         quarterclosed: item.QuarterSiteClosedRSRS
       };
@@ -231,6 +231,15 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
   const columns: IColumn[] =
     activityFilter === 'OpenSites'
       ? [...baseColumns, ...openSiteExtraColumns, ...tailColumns] : [...baseColumns, ...tailColumns];
+      
+      const formatCurrency = (value: any): string => {
+  const num = Number(value || 0);
+
+  return num.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
 
   function createColumn(field: string, name: string, minWidth:number, maxWidth:number,isNumber?: boolean,): IColumn {
     return {
@@ -247,25 +256,68 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
 
       // ✅ Custom render for Site Name
       onRender: (item: any) => {
-        if (field === "id") {
-          console.log(item, "itemitemitemitem");
 
-          const url =
-            props.context.pageContext.web.absoluteUrl +
-            "/SitePages/SiteOverview.aspx?sid=" +
-            item.ID +
-            "&Claim_type=" +
-            (item.claimType ? item.claimType.split(' ')[0] : "");
-          return (
-            <span
-              style={{ color: "#0078d4", cursor: "pointer" }}
-              onClick={() => window.open(url, "_blank")}> {item.id}
-            </span>
-          );
-        }
+  // RSRS Site ID hyperlink
+  if (field === "id") {
+    const url =
+      props.context.pageContext.web.absoluteUrl +
+      "/SitePages/SiteOverview.aspx?sid=" +
+      item.ID +
+      "&Claim_type=" +
+      (item.claimType
+        ? item.claimType.split(" ")[0]
+        : "");
 
-        return item[field];
-      }
+    return (
+      <span
+        style={{
+          color: "#0078d4",
+          cursor: "pointer"
+        }}
+        onClick={() => window.open(url, "_blank")}
+      >
+        {item.id}
+      </span>
+    );
+  }
+
+  // BET Flag
+  if (field === "betflag") {
+    return (
+      <span
+        style={{
+          color:
+            item.betflag === "Yes"
+              ? "red"
+              : undefined
+        }}
+      >
+        {item.betflag}
+      </span>
+    );
+  }
+
+  // Currency Columns
+  if (
+    field === "totalProjectCost" ||
+    field === "totalspendingtodate" ||
+    field === "reservebalance" ||
+    field === "totalbetcost" ||
+    field === "betdifference"
+  ) {
+    return formatCurrency(item[field]);
+  }
+
+  // Percentage Column
+  if (field === "betdifferencepercent") {
+    return item[field] !== null &&
+      item[field] !== undefined
+      ? `${item[field]}%`
+      : "";
+  }
+
+  return item[field];
+}
     };
   }
   const exportToExcel = () => {
