@@ -33,22 +33,55 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
   const [searchText, setSearchText] = useState('');
   const [activityFilter, setActivityFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortKey, setSortKey] = useState<string>('');
+  const [sortKey, setSortKey] = useState<string>('id');
   const [isSortedDescending, setIsSortedDescending] = useState<boolean>(false);
 
   const itemsPerPage = 10;
   const formatPersonName = (name?: string): string => {
-  if (!name) return "";
+    if (!name) return "";
 
-  const parts = name.split(",");
+    const parts = name.split(",");
 
-  if (parts.length > 1) {
-    return `${parts[1].trim()} ${parts[0].trim()}`;
+    if (parts.length > 1) {
+      return `${parts[1].trim()} ${parts[0].trim()}`;
+    }
+
+    return name;
+  };
+  const getContactName = (
+  email?: string,
+  contactMap?: Record<string, string>
+): string => {
+
+  if (!email || !contactMap) {
+    return "";
   }
 
-  return name;
+  return (
+    contactMap[email.toLowerCase()] ||
+    email
+  );
 };
   const loadData = async () => {
+    const contacts = await sp.web.lists
+  .getByTitle("Contacts")
+  .items.select(
+    "ContactEmail",
+    "Title",
+    "LastName"
+  )
+  .top(4999)();
+  const contactMap: Record<string, string> = {};
+
+contacts.forEach((contact: any) => {
+  if (contact.ContactEmail) {
+    contactMap[
+      contact.ContactEmail.toLowerCase()
+    ] =
+      `${contact.Title || ""} ${contact.LastName || ""}`.trim();
+  }
+});
+
 
     // ✅ Fetch Site list
     const sites = await sp.web.lists
@@ -57,32 +90,45 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
         "ID", "Title", "RSRSSiteName",
         "SiteLead/Title", "SiteSupport/Title", "SiteUpdateOwner/Title",
         "City", "State", "Country", "Legacy_Company",
-        "AccountCodeBlock", "Site_Activity", "Site_Type", "Claim_Type",
-        "TotalProjectCost", "TotalSpendingToDate", "DateSiteAdded", "QuarterSiteClosedRSRS"
+        "AccountCodeBlock", "AccountProjectCode", "Site_Activity", "Site_Type", "Claim_Type",
+        "TotalProjectCost", "TotalSpendingToDate", "DateSiteAdded", "QuarterSiteClosedRSRS", "Site_Lead", "Site_Support", "RSRS_Update_Owner3"
       )
       .expand("SiteLead", "SiteSupport", "SiteUpdateOwner")
       .top(4999)();
-   
-    const updates = await sp.web.lists
-      .getByTitle("SiteUpdate")
-      .items.select(
-        "SiteName/Title",   // lookup to Site list
-        "BETFlag",
-        "TotalBETCost",
-        "BETDiffrence",
-        "BETDiffrencePercentage"
-      )
-      .expand("SiteName")
-      .top(4999)();
+    const currentDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(
+      currentDate.getDate() - 456
+    );
 
-    // ✅ Convert Siteupdate to lookup map for fast matching
-    const updateMap: any = {};
-    updates.forEach((u: any) => {
-      const key = u.SiteName?.Title;
-      if (key) {
-        updateMap[key] = u;
-      }
-    });
+    const updates =
+  await sp.web.lists
+    .getByTitle("SiteUpdate")
+    .items
+    .filter(
+      `Modified ge datetime'${startDate.toISOString()}'
+       and Modified le datetime'${currentDate.toISOString()}'`
+    )
+    .select(
+      "SiteName/Title",
+      "BETFlag",
+      "TotalBETCost",
+      "BETDiffrence",
+      "BETDiffrencePercentage",
+      "Modified",
+      "Quarter"
+    )
+    .expand("SiteName")
+    .orderBy("Quarter", false)
+    .top(4999)();
+
+const updateMap: any = {};
+updates.forEach((u: any) => {
+  const key = u.SiteName?.Title;
+  if (key && !updateMap[key]) {
+    updateMap[key] = u;
+  }
+});
 
     // ✅ Merge both datasets
     const finalData = sites.map((item: any) => {
@@ -100,14 +146,14 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
         ID: item.ID,
         id: item.Title,
         siteName: item.RSRSSiteName,
-        siteLead: formatPersonName(item.SiteLead?.[0]?.Title),
-        siteSupport: formatPersonName(item.SiteSupport?.[0]?.Title),
-        rsrsUpdateOwner: formatPersonName(item.SiteUpdateOwner?.[0]?.Title),
+        siteLead: item.SiteLead?.[0]?.Title ? formatPersonName(item.SiteLead[0].Title) : getContactName(item.Site_Lead, contactMap),
+        siteSupport: item.SiteSupport?.[0]?.Title ? formatPersonName(item.SiteSupport[0].Title) : getContactName(item.Site_Support, contactMap),
+        rsrsUpdateOwner: item.SiteUpdateOwner?.[0]?.Title ? formatPersonName(item.SiteUpdateOwner[0].Title) : getContactName(item.RSRS_Update_Owner3, contactMap),
         city: item.City,
         state: item.State,
         country: item.Country,
         legacyCompany: item.Legacy_Company,
-        accountCode: item.AccountCodeBlock,
+        accountCode: item.AccountProjectCode,
         siteactivity: item.Site_Activity,
         siteType: item.Site_Type,
         claimType: item.Claim_Type,
@@ -201,7 +247,7 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
     createColumn('siteName', 'Site Name',120,150),
     createColumn('siteLead', 'Site Lead',120,150),
     createColumn('siteSupport', 'Site Support',120,150),
-    createColumn('rsrsUpdateOwner', 'RSRS Update Owner',140,150),
+    createColumn('rsrsUpdateOwner', 'RSRS Update Owner', 140, 150),
     createColumn('city', 'City',120,150),
     createColumn('state', 'State',120,150),
     createColumn('country', 'Country',120,150),
@@ -231,17 +277,17 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
   const columns: IColumn[] =
     activityFilter === 'OpenSites'
       ? [...baseColumns, ...openSiteExtraColumns, ...tailColumns] : [...baseColumns, ...tailColumns];
-      
-      const formatCurrency = (value: any): string => {
-  const num = Number(value || 0);
 
-  return num.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
+  const formatCurrency = (value: any): string => {
+    const num = Number(value || 0);
 
-  function createColumn(field: string, name: string, minWidth:number, maxWidth:number,isNumber?: boolean,): IColumn {
+    return num.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  function createColumn(field: string, name: string, minWidth: number, maxWidth: number, isNumber?: boolean,): IColumn {
     return {
       key: field,
       name: name,
@@ -257,67 +303,67 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
       // ✅ Custom render for Site Name
       onRender: (item: any) => {
 
-  // RSRS Site ID hyperlink
-  if (field === "id") {
-    const url =
-      props.context.pageContext.web.absoluteUrl +
-      "/SitePages/SiteOverview.aspx?sid=" +
-      item.ID +
-      "&Claim_type=" +
-      (item.claimType
-        ? item.claimType.split(" ")[0]
-        : "");
+        // RSRS Site ID hyperlink
+        if (field === "id") {
+          const url =
+            props.context.pageContext.web.absoluteUrl +
+            "/SitePages/SiteOverview.aspx?sid=" +
+            item.ID +
+            "&Claim_type=" +
+            (item.claimType
+              ? item.claimType.split(" ")[0]
+              : "");
 
-    return (
-      <span
-        style={{
-          color: "#0078d4",
-          cursor: "pointer"
-        }}
-        onClick={() => window.open(url, "_blank")}
-      >
-        {item.id}
-      </span>
-    );
-  }
+          return (
+            <span
+              style={{
+                color: "#0078d4",
+                cursor: "pointer"
+              }}
+              onClick={() => window.open(url, "_blank")}
+            >
+              {item.id}
+            </span>
+          );
+        }
 
-  // BET Flag
-  if (field === "betflag") {
-    return (
-      <span
-        style={{
-          color:
-            item.betflag === "Yes"
-              ? "red"
-              : undefined
-        }}
-      >
-        {item.betflag}
-      </span>
-    );
-  }
+        // BET Flag
+        if (field === "betflag") {
+          return (
+            <span
+              style={{
+                color:
+                  item.betflag === "Yes"
+                    ? "red"
+                    : undefined
+              }}
+            >
+              {item.betflag}
+            </span>
+          );
+        }
 
-  // Currency Columns
-  if (
-    field === "totalProjectCost" ||
-    field === "totalspendingtodate" ||
-    field === "reservebalance" ||
-    field === "totalbetcost" ||
-    field === "betdifference"
-  ) {
-    return formatCurrency(item[field]);
-  }
+        // Currency Columns
+        if (
+          field === "totalProjectCost" ||
+          field === "totalspendingtodate" ||
+          field === "reservebalance" ||
+          field === "totalbetcost" ||
+          field === "betdifference"
+        ) {
+          return formatCurrency(item[field]);
+        }
 
-  // Percentage Column
-  if (field === "betdifferencepercent") {
-    return item[field] !== null &&
-      item[field] !== undefined
-      ? `${item[field]}%`
-      : "";
-  }
+        // Percentage Column
+        if (field === "betdifferencepercent") {
+          return item[field] !== null &&
+            item[field] !== undefined
+            ? `${item[field]}%`
+            : "";
+        }
 
-  return item[field];
-}
+        return item[field];
+      }
     };
   }
   const exportToExcel = () => {
@@ -381,35 +427,35 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
     { key: 'OpenSites', text: 'Open Sites' }
   ];
 
-const headerClass = mergeStyles({
-  backgroundColor: '#0078d4',
-  selectors: {
-    '.ms-DetailsHeader-cell': {
-      backgroundColor: '#0078d4'
-    },
+  const headerClass = mergeStyles({
+    backgroundColor: '#0078d4',
+    selectors: {
+      '.ms-DetailsHeader-cell': {
+        backgroundColor: '#0078d4'
+      },
 
-    '.ms-DetailsHeader-cell:hover': {
-      backgroundColor: '#0a4a7e !important'
-    },
+      '.ms-DetailsHeader-cell:hover': {
+        backgroundColor: '#0a4a7e !important'
+      },
 
-    '.ms-DetailsHeader-cell.is-actionable:hover': {
-      backgroundColor: '#0a4a7e !important'
-    },
+      '.ms-DetailsHeader-cell.is-actionable:hover': {
+        backgroundColor: '#0a4a7e !important'
+      },
 
-    '.ms-DetailsHeader-cellTitle': {
-      color: 'white',
-      fontWeight: 600
-    },
+      '.ms-DetailsHeader-cellTitle': {
+        color: 'white',
+        fontWeight: 600
+      },
 
-    '.ms-DetailsHeader-cell:hover .ms-DetailsHeader-cellTitle': {
-      color: 'black !important'
-    },
+      '.ms-DetailsHeader-cell:hover .ms-DetailsHeader-cellTitle': {
+        color: 'black !important'
+      },
 
-    '.ms-DetailsHeader-cell:hover .ms-DetailsHeader-cellName': {
-      color: 'black !important'
+      '.ms-DetailsHeader-cell:hover .ms-DetailsHeader-cellName': {
+        color: 'black !important'
+      }
     }
-  }
-});
+  });
 
   return (
     <>
@@ -445,10 +491,10 @@ const headerClass = mergeStyles({
 
 
               <PrimaryButton
-               disabled={filteredItems.length===0}
+                disabled={filteredItems.length===0}
                 onClick={exportToExcel}
                 className={styles.exportBtn}>
-                  
+
                 <Icon iconName="ExcelDocument" style={{ marginRight: 6 }} />
                 Export to Excel
               </PrimaryButton>
@@ -477,10 +523,10 @@ const headerClass = mergeStyles({
               <div
                 style={{
                   textAlign: "center",
-        padding: "20px",
-        border: "1px solid #d1d1d1",
-        borderTop: "none",
-        backgroundColor: "#fff"
+                  padding: "20px",
+                  border: "1px solid #d1d1d1",
+                  borderTop: "none",
+                  backgroundColor: "#fff"
                 }}
               >
                 No matching records found
@@ -489,7 +535,7 @@ const headerClass = mergeStyles({
 
             <div className={styles.paginationContainer}>
               <PrimaryButton
-              text='Previous'
+                text='Previous'
                 onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
               />
