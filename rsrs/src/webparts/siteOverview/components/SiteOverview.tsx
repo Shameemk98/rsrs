@@ -730,7 +730,7 @@ setLegacySiteUpdateOwner(legacyUpdateOwnerTitle);
 
         originalCompanyConnection: site.OriginalCompanyConnection,
        //originalCompanyConnection:decodeHtml(site.OriginalCompanyConnection || ""),
-        dateSiteAdded: site.DateSiteAdded,
+        dateSiteAdded: site.Created,
 
         obligationType: obligtionTyp as string,
         operatingGroup: opertnGrp as string,
@@ -1085,24 +1085,30 @@ else {
 
     setIsAdmin(admin);
   };
-  useEffect(() => {
-    if (
-      countryOptions.length > 0 &&
-      siteTypeOptions.length > 0 &&
-      legacyCompaniesOptions.length > 0 &&
-      operatingGroupOptions.length > 0&&
-      contactsOptions.length>0
-    ) {
-      void loadSites("all", isAdmin);
-    }
-  }, [
-    countryOptions,
-    siteTypeOptions,
-    legacyCompaniesOptions,
-    operatingGroupOptions,
-    contactsOptions,
-    isAdmin
-  ]);
+useEffect(() => {
+  if (
+    countryOptions.length > 0 &&
+    siteTypeOptions.length > 0 &&
+    legacyCompaniesOptions.length > 0 &&
+    operatingGroupOptions.length > 0 &&
+    contactsOptions.length > 0
+  ) {
+    const savedView =
+      localStorage.getItem("site_activity_overview")
+      || "Open";
+
+    setSelectedView(savedView);
+
+    void loadSites(savedView, isAdmin);
+  }
+}, [
+  countryOptions,
+  siteTypeOptions,
+  legacyCompaniesOptions,
+  operatingGroupOptions,
+  contactsOptions,
+  isAdmin
+]);
   useEffect(() => {
     void initialize();
     const currentUserEmail = props.context.pageContext.user.email;
