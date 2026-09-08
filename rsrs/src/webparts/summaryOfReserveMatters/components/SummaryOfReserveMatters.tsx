@@ -37,6 +37,17 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
   const [isSortedDescending, setIsSortedDescending] = useState<boolean>(false);
 
   const itemsPerPage = 10;
+  const formatPersonName = (name?: string): string => {
+  if (!name) return "";
+
+  const parts = name.split(",");
+
+  if (parts.length > 1) {
+    return `${parts[1].trim()} ${parts[0].trim()}`;
+  }
+
+  return name;
+};
   const loadData = async () => {
 
     // ✅ Fetch Site list
@@ -51,9 +62,6 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
       )
       .expand("SiteLead", "SiteSupport", "SiteUpdateOwner")
       .top(4999)();
-
-
-
    
     const updates = await sp.web.lists
       .getByTitle("SiteUpdate")
@@ -92,9 +100,9 @@ export default function SummaryOfReserveMatters(props: ISummaryOfReserveMattersP
         ID: item.ID,
         id: item.Title,
         siteName: item.RSRSSiteName,
-        siteLead: item.SiteLead?.[0]?.Title || "",
-        siteSupport: item.SiteSupport?.[0]?.Title || "",
-        rsrsUpdateOwner: item.SiteUpdateOwner?.[0]?.Title || "",
+        siteLead: formatPersonName(item.SiteLead?.[0]?.Title),
+        siteSupport: formatPersonName(item.SiteSupport?.[0]?.Title),
+        rsrsUpdateOwner: formatPersonName(item.SiteUpdateOwner?.[0]?.Title),
         city: item.City,
         state: item.State,
         country: item.Country,
@@ -353,7 +361,7 @@ const headerClass = mergeStyles({
 
   return (
     <>
-      <RsrsHeader context={props.context} />
+      {/* <RsrsHeader context={props.context} /> */}
       <section className={styles.summaryOfReserveMatters}>
         <div className={styles.header}>
           <Link href={`${props.context.pageContext.web.absoluteUrl}/SitePages/Home.aspx`}>
