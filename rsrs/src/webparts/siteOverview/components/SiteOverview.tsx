@@ -56,7 +56,7 @@ export default function SiteOverview(props: ISiteOverviewProps): React.ReactElem
   const [jumpSiteOptions, setJumpSiteOptions] = useState<IDropdownOption[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<number>();
   const [siteNumber, setSiteNumber] = useState<string>("");
-  const [selectedView, setSelectedView] = useState("all");
+  const [selectedView, setSelectedView] = useState(localStorage.getItem("site_activity_overview") || "Open");
   const [siteLeadUsers, setSiteLeadUsers] = useState<any[]>([]);
   const [siteSupportUsers, setSiteSupportUsers] = useState<any[]>([]);
   const [siteUpdateOwnerUsers, setSiteUpdateOwnerUsers] = useState<any[]>([]);
@@ -70,7 +70,6 @@ export default function SiteOverview(props: ISiteOverviewProps): React.ReactElem
   const [isSiteLoading, setIsSiteLoading] =  useState<boolean>(false);
   const [showDialog, setShowDialog] = useState(false);
 const [isErrorDialog, setIsErrorDialog] = useState(false);
-const [redirectUrl, setRedirectUrl] = useState("");
 const [legacySiteLead, setLegacySiteLead] =  useState<string>("");
 const [legacySiteSupport, setLegacySiteSupport] =  useState<string>("");
 const [legacySiteUpdateOwner, setLegacySiteUpdateOwner] =  useState<string>("");
@@ -311,6 +310,7 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
           }
         );
       }
+      await loadSiteById(selectedSiteId);
 
       formTopRef.current?.scrollIntoView({
         behavior: "smooth",
@@ -341,8 +341,6 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
       setMessageType(
         MessageBarType.error
       );
-
-      setRedirectUrl("");
       setIsErrorDialog(true);
       setShowDialog(true);
     }
@@ -998,25 +996,51 @@ else if (filterType === "Updated") {
 
   if (currentSiteStillExists) {
 
-    void loadSiteById(selectedSiteId!);
+  localStorage.setItem(
+    "SelectedSite",
+    String(selectedSiteId)
+  );
 
-  } else if (filteredSites.length > 0) {
+  void loadSiteById(selectedSiteId!);
 
-    // Select first site automatically
-    const firstSiteId = filteredSites[0].Id;
+}
+else if (filteredSites.length > 0) {
 
-    setSelectedSiteId(firstSiteId);
+  const savedSiteId = Number(
+    localStorage.getItem("SelectedSite")
+  );
 
-    // Load first site's details
-    void loadSiteById(firstSiteId);
+  const savedSiteExists =
+    filteredSites.some(
+      (site: any) =>
+        site.Id === savedSiteId
+    );
 
-  } else {
+  const siteToLoad =
+    savedSiteExists
+      ? savedSiteId
+      : filteredSites[0].Id;
 
-    // No sites after filter
-    setSelectedSiteId(undefined);
+  localStorage.setItem(
+    "SelectedSite",
+    String(siteToLoad)
+  );
 
-    reset();
-  }
+  setSelectedSiteId(siteToLoad);
+
+  void loadSiteById(siteToLoad);
+
+}
+else {
+
+  localStorage.removeItem(
+    "SelectedSite"
+  );
+
+  setSelectedSiteId(undefined);
+
+  reset();
+}
 };
 
 
@@ -1104,6 +1128,16 @@ useEffect(() => {
     void loadSiteById(siteId);
   }
 }, [jumpSiteOptions]);
+useEffect(() => {
+
+  const savedView =
+    localStorage.getItem(
+      "site_activity_overview"
+    ) || "Open";
+
+  setSelectedView(savedView);
+
+}, []);
 
 
   const peoplePickerContext = {
@@ -1180,11 +1214,12 @@ useEffect(() => {
   <DialogFooter>
     <PrimaryButton
       text="OK"
-      onClick={() => {
+      onClick={async() => {
         setShowDialog(false);
 
-        if (!isErrorDialog && redirectUrl) {
-          window.location.href = redirectUrl;
+        if (!isErrorDialog && selectedSiteId) {
+          await loadSiteById(selectedSiteId);
+
         }
       }}
     />
@@ -1258,12 +1293,16 @@ useEffect(() => {
             <Dropdown
               options={viewSitesOptions}
               selectedKey={selectedView}
-              onChange={(_, option) => {
-                const value = option?.key as string;
-                setSelectedView(value);
-                void loadSites(value, isAdmin);
+                onChange={(_, option) => {
+                  const value = option?.key as string;
 
-              }}
+                  localStorage.setItem(
+                    "site_activity_overview",
+                    value
+                  );
+                  setSelectedView(value);
+                  void loadSites(value, isAdmin);
+                }}
               styles={formStyles.dropdown}
 
             />
@@ -1283,6 +1322,10 @@ useEffect(() => {
                 selectedKey={selectedSiteId}
                 onChange={(_, option) => {
                   const siteId = option?.key as number;
+                  localStorage.setItem(
+                    "SelectedSite",
+                    String(siteId)
+                  );
                   setSelectedSiteId(siteId);
                   void loadSiteById(siteId);
                 }}
