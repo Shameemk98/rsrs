@@ -897,6 +897,26 @@ const loadSites = async (
 
   const currentUserId =    props.context.pageContext.legacyPageContext.userId;
   const currentUserEmail =   props.context.pageContext.user.email.toLowerCase();
+  const configItems = await spService.getItems(
+  "ConfigurationSetting"
+);
+
+const quarter =
+  configItems.find(
+    (item: any) =>
+      item.Title === "CurrentQuarter"
+  )?.Value0 ??
+  configItems.find(
+    (item: any) =>
+      item.Title === "CurrentQuarter"
+  )?.Value ??
+  "";
+
+const currentQuarter =
+  Number(
+    quarter.toString().replace("Q", "")
+  );
+  const includeMonitorOnly = currentQuarter === 3;
 
   let filteredSites = [...sites];
 
@@ -945,13 +965,17 @@ const loadSites = async (
   // My Open Sites
   if (filterType === "Open") {
 
-    filteredSites = filteredSites.filter(
-      (site: any) =>
-        site.Site_Activity === "Open" ||
-        site.Site_Activity === "Open - Monitor Only"
-    );
+  filteredSites = filteredSites.filter(
+    (site: any) =>
+      site.Site_Activity === "Open" ||
+      (
+        includeMonitorOnly &&
+        site.Site_Activity ===
+          "Open - Monitor Only"
+      )
+  );
 
-  }
+}
 
   // My Update Sites
 else if (filterType === "Updated") {
@@ -970,10 +994,14 @@ else if (filterType === "Updated") {
   );
 
   filteredSites = filteredSites.filter(
-    (site: any) =>
-      site.Site_Activity === "Open" ||
-      site.Site_Activity === "Open - Monitor Only"
-  );
+  (site: any) =>
+    site.Site_Activity === "Open" ||
+    (
+      includeMonitorOnly &&
+      site.Site_Activity ===
+        "Open - Monitor Only"
+    )
+);
 }
 
   const options = filteredSites.map((site: any) => ({
