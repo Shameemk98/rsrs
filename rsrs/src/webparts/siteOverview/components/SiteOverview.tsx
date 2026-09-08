@@ -71,6 +71,10 @@ export default function SiteOverview(props: ISiteOverviewProps): React.ReactElem
   const [showDialog, setShowDialog] = useState(false);
 const [isErrorDialog, setIsErrorDialog] = useState(false);
 const [redirectUrl, setRedirectUrl] = useState("");
+const [legacySiteLead, setLegacySiteLead] =  useState<string>("");
+const [legacySiteSupport, setLegacySiteSupport] =  useState<string>("");
+const [legacySiteUpdateOwner, setLegacySiteUpdateOwner] =  useState<string>("");
+const [contactsData, setContactsData] = useState<any[]>([]);
 
   const formTopRef = React.useRef<HTMLDivElement>(null);
   const spService = new SpService(props.context);
@@ -121,8 +125,8 @@ const parseHtmlToPlainText = (html: string): string => {
 };
 const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
 
-  const hasSiteUpdateOwner =
-    siteUpdateOwnerUsers?.length > 0;
+  const hasSiteUpdateOwner = siteUpdateOwnerUsers?.length > 0 ;
+  //||!!legacySiteUpdateOwner;
 
   const hasOutsideCounsel =
     supportRows.some(
@@ -139,8 +143,8 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
 
   const onSubmit = async (data: IFormData): Promise<void> => {
     if (!validateUpdateOwnerOrOutsideCounsel()) {
-  return;
-}
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -172,7 +176,7 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
           user.loginName
         );
 
-        return ensuredUser?.Id?? null;
+        return ensuredUser?.Id ?? null;
       };
 
       const siteLeadUserId =
@@ -189,13 +193,38 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
         siteUpdateOwnerUsers?.length > 0
           ? await getUserId(siteUpdateOwnerUsers[0])
           : null;
+      let outsideCounselEmail = "";
+
+      const hasOutsideCounsel =
+        supportRows.some((row) => {
+
+          if (row.role !== "Outside Counsel") {
+            return false;
+          }
+
+          const contact = contactsData.find(
+            c => c.Id === row.support
+          );
+
+          if (contact?.ContactEmail) {
+            outsideCounselEmail = contact.ContactEmail;
+            return true;
+          }
+
+          return false;
+        });
+      const countryText =
+        countryOptions.find(
+          x => x.key === data.country
+        )?.text || "";
       const payload: any = {
 
         RSRSSiteName: data.siteName,
         Claim_Type: data.claimType,
-        Country: countryOptions.find(x => x.key === data.country)?.text || "",
+        Country: countryText,
         City: data.city,
         State: data.state,
+        Site_Location: `${data.city || ""},${data.state || ""},${countryText || ""}`,
         Site_Type: siteTypeOptions.find(x => x.key === data.siteType)?.text || "",
         Site_Activity: data.siteActivity,
         Legacy_Company: legacyCompaniesOptions.find(x => x.key === data.legacyCompany)?.text || "",
@@ -204,11 +233,24 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
         // SiteLeadId: siteLeadUser?.Id ? [siteLeadUser.Id] : [],
         // SiteSupportId: siteSupportUser?.Id ? [siteSupportUser?.Id] : [],
         // SiteUpdateOwnerId: siteUpdateOwnerUser?.Id ? [siteUpdateOwnerUser?.Id] : [],
-        SiteLeadId: siteLeadUserId?[siteLeadUserId]:[],
-        SiteSupportId: siteSupportUserId?[siteSupportUserId]:[],
-        SiteUpdateOwnerId: siteUpdateOwnerUserId?[siteUpdateOwnerUserId]:[],
+        SiteLeadId: siteLeadUserId ? [siteLeadUserId] : [],
+        SiteSupportId: siteSupportUserId ? [siteSupportUserId] : [],
+        // SiteUpdateOwnerId: siteUpdateOwnerUserId?[siteUpdateOwnerUserId]:[],
+        SiteUpdateOwnerId: siteUpdateOwnerUserId ? [siteUpdateOwnerUserId] : [],
 
       };
+      if (
+        !siteUpdateOwnerUserId &&
+        hasOutsideCounsel &&
+        outsideCounselEmail
+      ) {
+
+        payload.RSRS_Update_Owner3 =
+          outsideCounselEmail;
+
+        payload.SiteUpdateOwnerId = [];
+
+      }
       console.log(payload, "payloadpayload");
 
       if (data.claimType === "Indemnification") {
@@ -231,15 +273,15 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
         payload
       );
       setJumpSiteOptions(prev =>
-  prev.map(item =>
-    item.key === selectedSiteId
-      ? {
-          ...item,
-          text: data.siteName
-        }
-      : item
-  )
-);
+        prev.map(item =>
+          item.key === selectedSiteId
+            ? {
+              ...item,
+              text: data.siteName
+            }
+            : item
+        )
+      );
       const existingSupports =
         await spService.getItems(
           props.SiteAdditionalSupportListName,
@@ -276,14 +318,10 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
       });
 
       setMessage("Site updated successfully.");
-setMessageType(MessageBarType.success);
-
-setRedirectUrl(
-  `${props.context.pageContext.web.absoluteUrl}/SitePages/Home.aspx`
-);
-
-setIsErrorDialog(false);
-setShowDialog(true);
+      setMessageType(MessageBarType.success);
+      //setRedirectUrl(  `${props.context.pageContext.web.absoluteUrl}/SitePages/Home.aspx`);
+      setIsErrorDialog(false);
+      setShowDialog(true);
 
 
     }
@@ -297,16 +335,16 @@ setShowDialog(true);
       });
 
       setMessage(
-  "An error occurred while updating the site."
-);
+        "An error occurred while updating the site."
+      );
 
-setMessageType(
-  MessageBarType.error
-);
+      setMessageType(
+        MessageBarType.error
+      );
 
-setRedirectUrl("");
-setIsErrorDialog(true);
-setShowDialog(true);
+      setRedirectUrl("");
+      setIsErrorDialog(true);
+      setShowDialog(true);
     }
     finally {
 
@@ -429,17 +467,31 @@ setShowDialog(true);
 
   const loadContacts = async (): Promise<void> => {
     try {
-      const items = await spService.getItems(props.ContactsListName, ["Id", "Title"], undefined, { field: "Title", ascending: true });
-      const options: IDropdownOption[] = [
-        {
-          key: "",
-          text: "Select Additional Support"
-        },
-        ...items.map(item => ({
-          key: item.Id,
-          text: item.Title
-        }))
-      ]; setContactsOptions(options);
+      const items = await spService.getItems(
+  props.ContactsListName,
+  [
+    "Id",
+    "Title",
+    "LastName",
+    "ContactEmail"
+  ],
+  undefined,
+  { field: "Title", ascending: true }
+);
+
+setContactsData(items);
+
+const options: IDropdownOption[] = [
+  {
+    key: "",
+    text: "Select Additional Support"
+  },
+  ...items.map(item => ({
+    key: item.Id,
+    text: item.Title
+  }))
+];
+setContactsOptions(options);
     } catch (error) {
       console.error("Error loading countries:", error);
     }
@@ -555,6 +607,27 @@ const handleUpdateClick = async (): Promise<void> => {
 
     }
   };
+const getLegacyUserTitle = (
+  email?: string
+): string => {
+
+  if (!email) {
+    return "";
+  }
+
+  const contact = contactsData.find(
+    x =>
+      x.ContactEmail?.toLowerCase() ===
+      email.toLowerCase()
+  );
+
+  return (
+    contact?.LastName ||
+    contact?.Title ||
+    email
+  );
+};
+
      const loadSiteById = async (siteId: number): Promise<void> => {
     setIsSiteLoading(true);
 
@@ -566,15 +639,29 @@ const handleUpdateClick = async (): Promise<void> => {
           siteId
         );
       setSiteNumber(site.Title);
+      const legacyLeadTitle =
+  (!site.SiteLead || site.SiteLead.length === 0)
+    ?  getLegacyUserTitle(site.Site_Lead)
+    : "";
+
+const legacySupportTitle =
+  (!site.SiteSupport || site.SiteSupport.length === 0)
+    ?  getLegacyUserTitle(site.Site_Support)
+    : "";
+
+const legacyUpdateOwnerTitle =
+  (!site.SiteUpdateOwner || site.SiteUpdateOwner.length === 0)
+    ?  getLegacyUserTitle(site.RSRS_Update_Owner3)
+    : "";
+
+setLegacySiteLead(legacyLeadTitle);
+setLegacySiteSupport(legacySupportTitle);
+setLegacySiteUpdateOwner(legacyUpdateOwnerTitle);
       setSiteLeadUsers(site.SiteLead || []);
+      setSiteSupportUsers(  site.SiteSupport || []      );
+      setSiteUpdateOwnerUsers(site.SiteUpdateOwner || []      );
 
-      setSiteSupportUsers(
-        site.SiteSupport || []
-      );
 
-      setSiteUpdateOwnerUsers(
-        site.SiteUpdateOwner || []
-      );
       const countryKey =
         countryOptions.find(
           x => x.text === site.Country
@@ -792,7 +879,8 @@ const loadSites = async (
       "SiteSupport/Id",
       "SiteSupport/Title",
       "SiteUpdateOwner/Id",
-      "SiteUpdateOwner/Title"
+      "SiteUpdateOwner/Title",
+      "Site_Lead","Site_Support","RSRS_Update_Owner3"
     ],
     undefined,
     { field: "RSRSSiteName", ascending: true },
@@ -800,8 +888,8 @@ const loadSites = async (
     ["SiteLead", "SiteSupport", "SiteUpdateOwner"]
   );
 
-  const currentUserId =
-    props.context.pageContext.legacyPageContext.userId;
+  const currentUserId =    props.context.pageContext.legacyPageContext.userId;
+  const currentUserEmail =   props.context.pageContext.user.email.toLowerCase();
 
   let filteredSites = [...sites];
 
@@ -809,27 +897,42 @@ const loadSites = async (
   if (!admin) {
     filteredSites = filteredSites.filter((site: any) => {
 
-      const isSiteLead =
-        site.SiteLead?.some(
-          (u: any) => u.Id === currentUserId
-        );
+  const isSiteLead =
+    site.SiteLead?.some(
+      (u: any) => u.Id === currentUserId
+    ) ||
+    (
+      !site.SiteLead?.length &&
+      site.Site_Lead &&
+      site.Site_Lead.toLowerCase() === currentUserEmail
+    );
 
-      const isSiteSupport =
-        site.SiteSupport?.some(
-          (u: any) => u.Id === currentUserId
-        );
+  const isSiteSupport =
+    site.SiteSupport?.some(
+      (u: any) => u.Id === currentUserId
+    ) ||
+    (
+      !site.SiteSupport?.length &&
+      site.Site_Support &&
+      site.Site_Support.toLowerCase() === currentUserEmail
+    );
 
-      const isSiteUpdateOwner =
-        site.SiteUpdateOwner?.some(
-          (u: any) => u.Id === currentUserId
-        );
+  const isSiteUpdateOwner =
+    site.SiteUpdateOwner?.some(
+      (u: any) => u.Id === currentUserId
+    ) ||
+    (
+      !site.SiteUpdateOwner?.length &&
+      site.RSRS_Update_Owner3 &&
+      site.RSRS_Update_Owner3.toLowerCase() === currentUserEmail
+    );
 
-      return (
-        isSiteLead ||
-        isSiteSupport ||
-        isSiteUpdateOwner
-      );
-    });
+  return (
+    isSiteLead ||
+    isSiteSupport ||
+    isSiteUpdateOwner
+  );
+});
   }
 
   // My Open Sites
@@ -844,22 +947,27 @@ const loadSites = async (
   }
 
   // My Update Sites
-  else if (filterType === "Updated") {
+else if (filterType === "Updated") {
 
-    filteredSites = filteredSites.filter(
-      (site: any) =>
-        site.SiteUpdateOwner?.some(
-          (u: any) => u.Id === currentUserId
-        )
-    );
+  filteredSites = filteredSites.filter(
+    (site: any) =>
+      site.SiteUpdateOwner?.some(
+        (u: any) => u.Id === currentUserId
+      )
+      ||
+      (
+        !site.SiteUpdateOwner?.length &&
+        site.RSRS_Update_Owner3 &&
+        site.RSRS_Update_Owner3.toLowerCase() === currentUserEmail
+      )
+  );
 
-    filteredSites = filteredSites.filter(
-      (site: any) =>
-        site.Site_Activity === "Open" ||
-        site.Site_Activity === "Open - Monitor Only"
-    );
-
-  }
+  filteredSites = filteredSites.filter(
+    (site: any) =>
+      site.Site_Activity === "Open" ||
+      site.Site_Activity === "Open - Monitor Only"
+  );
+}
 
   const options = filteredSites.map((site: any) => ({
     key: site.Id,
@@ -1262,6 +1370,13 @@ useEffect(() => {
                     }}
                     styles={customPickerStyles}
                   />
+                  {legacySiteLead && (
+                    <TextField
+                      value={legacySiteLead}
+                      readOnly
+                      styles={formStyles.readOnlyField}
+                    />
+                  )}
 
                   {errors.siteLead && (
                     <div
@@ -1301,6 +1416,13 @@ useEffect(() => {
               }}
                 styles={customPickerStyles}
             />
+              {legacySiteSupport && (
+                <TextField
+                  value={legacySiteSupport}
+                  readOnly
+                  styles={formStyles.readOnlyField}
+                />
+              )}
           </div>
         </div>
 
@@ -1324,6 +1446,13 @@ useEffect(() => {
               }}
                 styles={customPickerStyles}
             />
+              {legacySiteUpdateOwner && (
+                <TextField
+                  value={legacySiteUpdateOwner}
+                  readOnly
+                  styles={formStyles.readOnlyField}
+                />
+              )}
           </div>
         </div>
 
