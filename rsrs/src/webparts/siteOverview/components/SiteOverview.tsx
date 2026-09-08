@@ -283,16 +283,19 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
       );
       const existingSupports =
         await spService.getItems(
-          props.SiteAdditionalSupportListName,
+          "SiteAdditionalSupport",
+         // props.SiteAdditionalSupportListName,
           ["Id"],
-          `SiteIDId eq ${selectedSiteId}`
+          `SiteIDId eq ${selectedSiteId} and IsActive eq true`
         );
 
       for (const item of existingSupports) {
 
-        await spService.deleteItem(
-          props.SiteAdditionalSupportListName,
-          item.Id
+        await spService.updateItem(
+          "SiteAdditionalSupport",
+         // props.SiteAdditionalSupportListName,
+          item.Id,
+          {IsActive: "false"}
         );
 
       }
@@ -302,11 +305,13 @@ const validateUpdateOwnerOrOutsideCounsel = (): boolean => {
         if (!row.support) continue;
 
         await spService.createItem(
-          props.SiteAdditionalSupportListName,
+          //props.SiteAdditionalSupportListName,
+          "SiteAdditionalSupport",
           {
             SiteIDId: selectedSiteId,
             AdditionalContactId: row.support,
-            AdditionalSupportRole: row.role
+            AdditionalSupportRole: row.role,
+            IsActive: "true"
           }
         );
       }
@@ -573,14 +578,18 @@ const handleUpdateClick = async (): Promise<void> => {
   ): Promise<void> => {
 
     const items = await spService.getItems(
-      props.SiteAdditionalSupportListName,
+      "SiteAdditionalSupport",
+     // props.SiteAdditionalSupportListName,
       [
         "Id",
         "AdditionalContactId",
-        "AdditionalSupportRole"
+        "AdditionalSupportRole",
+        "IsActive"
       ],
-      `SiteIDId eq ${requestId}`
+      `SiteIDId eq ${requestId} and IsActive eq true`
+      //and IsActive eq 1
     );
+    
 
 
     if (items.length > 0) {
