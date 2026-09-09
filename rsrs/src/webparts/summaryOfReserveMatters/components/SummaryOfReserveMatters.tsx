@@ -162,7 +162,7 @@ updates.forEach((u: any) => {
         reservebalance: rb,
         totalbetcost: update?.TotalBETCost || 0,
         betdifference: update?.BETDiffrence || 0,
-        betdifferencepercent: update?.BETDiffrencePercentage || 0,
+        betdifferencepercent: update?.BETDiffrencePercentage ??  null,
         betflag: update?.BETFlag === "true" ? "Yes" : update?.BETFlag === "false" ? "No" : "",
         datesiteadded: item.DateSiteAdded ? item.DateSiteAdded.split("T")[0] : "",
         quarterclosed: item.QuarterSiteClosedRSRS
@@ -177,23 +177,43 @@ updates.forEach((u: any) => {
     void loadData();
   }, [])
 
-  const sortData = (data: any[], key: string, desc: boolean) => {
-    return [...data].sort((a, b) => {
-      let valA = a[key];
-      let valB = b[key];
+const sortData = (
+  data: any[],
+  key: string,
+  desc: boolean
+) => {
+  return [...data].sort((a, b) => {
+    let valA = a[key];
+    let valB = b[key];
 
-      if (valA == null) return 1;
-      if (valB == null) return -1;
+    // Numeric columns
+    if (
+      key === "totalProjectCost" ||
+      key === "totalspendingtodate" ||
+      key === "reservebalance" ||
+      key === "totalbetcost" ||
+      key === "betdifference" ||
+      key === "betdifferencepercent"
+    ) {
+      valA = Number(valA);
+      valB = Number(valB);
 
-      if (typeof valA === 'string') {
-        return desc
-          ? valB.localeCompare(valA)
-          : valA.localeCompare(valB);
-      }
+      return desc
+        ? valB - valA
+        : valA - valB;
+    }
 
-      return desc ? valB - valA : valA - valB;
-    });
-  };
+    if (typeof valA === "string") {
+      return desc
+        ? valB.localeCompare(valA)
+        : valA.localeCompare(valB);
+    }
+
+    return desc
+      ? valB - valA
+      : valA - valB;
+  });
+};
 
   const onColumnClick = (ev: React.MouseEvent<HTMLElement>, column: IColumn) => {
     const newDesc = sortKey === column.fieldName ? !isSortedDescending : false;
@@ -356,11 +376,20 @@ updates.forEach((u: any) => {
 
         // Percentage Column
         if (field === "betdifferencepercent") {
-          return item[field] !== null &&
-            item[field] !== undefined
-            ? `${item[field]}%`
-            : "";
-        }
+
+  const value = item[field];
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === "" ||
+    isNaN(Number(value))
+  ) {
+    return "-";
+  }
+
+  return `${value}`;
+}
 
         return item[field];
       }
