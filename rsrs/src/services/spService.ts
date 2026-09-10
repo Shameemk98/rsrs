@@ -151,11 +151,11 @@ public async getPagedItems(
     return this.sp.web.lists
       .getByTitle(listTitle)
       .items.getById(id)
-      .select('*', 'SiteLead/Id','SiteLead/Title','SiteLead/EMail',
+      .select('*', 'SiteLead/Id','SiteLead/Title','SiteLead/EMail',"RSRSSiteId/Title",
         'SiteSupport/Id','SiteSupport/Title','SiteSupport/EMail',
         'SiteUpdateOwner/Id','SiteUpdateOwner/Title','SiteUpdateOwner/EMail','Author/Title')
       //.select('*', 'SiteLead/Id','SiteLead/Title','SiteSupport/Id','SiteSupport/Title','SiteUpdateOwner/Id','SiteUpdateOwner/Title')
-      .expand('SiteLead','SiteSupport','SiteUpdateOwner','Author')();
+      .expand('SiteLead','SiteSupport','SiteUpdateOwner','Author','RSRSSiteId')();
   }
   private readonly itemSelectFields = [
     "*",

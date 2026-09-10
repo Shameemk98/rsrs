@@ -425,18 +425,30 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
 
     });
 
-    await loadAdditionalSupport(id);
+ await loadAdditionalSupport(id);
 
-    if (
-      item.Site_Type &&
-      pageMode === "approval"
-    ) {
+if (
+  item.IsCreated === true &&
+  item.IsApproved === "Approved"
+) {
 
-      await getSiteIdDetails(
-        item.Site_Type
-      );
+  // Approved → show created site's ID
+  setGeneratedSiteId(
+    item.RSRSSiteId?.Title || ""
+  );
 
-    }
+}
+else {
+
+  // Pending + Rejected → show current SiteType counter
+  if (item.Site_Type) {
+
+    await getSiteIdDetails(
+      item.Site_Type
+    );
+  }
+
+}
 
   };
   const navigateToDashboard = (): void => {
@@ -1425,7 +1437,7 @@ setOwnerValidationError(""); */
 
   }, []);
 
-  useEffect(() => {
+/*   useEffect(() => {
 
     if (
       pageMode === "approval"
@@ -1451,7 +1463,7 @@ setOwnerValidationError(""); */
 
     }
 
-  }, [pageMode, requestId]);
+  }, [pageMode, requestId]); */
 const handleApproveClick = (): void => {
 
   const currentData = watch();
