@@ -57,7 +57,7 @@ const obligationTypeOptions: IDropdownOption[] = [
 
 interface ISupportRow {
   id: number;
-  support?: string;
+  support?: string | number;
   role?: string;
 }
 
@@ -155,11 +155,11 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
 
   const spService = new SpService(props.context);
   const requestId = new URLSearchParams(window.location.search).get("RequestId");
-  const textFieldStyles =  isReadOnly ? formStyles.readOnlyField : formStyles.textField;
+  const textFieldStyles = isReadOnly ? formStyles.readOnlyField : formStyles.textField;
   const multiLineFieldStyles = isReadOnly ? formStyles.readOnlyMultiLineField : formStyles.multilineField;
-  const dropdownStyles =  isReadOnly ? customDropdownStyles : formStyles.dropdown;
-   const comboBoxStyles =  isReadOnly ? customComboBoxStyles : formStyles.comboBox;
-  const peoplepickerstyles=isReadOnly? customPickerStyles:{}
+  const dropdownStyles = isReadOnly ? customDropdownStyles : formStyles.dropdown;
+  const comboBoxStyles = isReadOnly ? customComboBoxStyles : formStyles.comboBox;
+  const peoplepickerstyles = isReadOnly ? customPickerStyles : {}
   const navigateToAccessDenied = (): void => {
     window.location.href =
       `${props.context.pageContext.web.absoluteUrl}/SitePages/AccessDenied.aspx`;
@@ -275,7 +275,7 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
       `${props.context.pageContext.web.absoluteUrl}/SitePages/Home.aspx`;
   };
 
-   const loadAdditionalSupport =
+  const loadAdditionalSupport =
     async (
       requestId: number
     ): Promise<void> => {
@@ -301,9 +301,8 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
           (item: any) => ({
 
             id: item.Id,
-
-            support:
-              item.AdditionalContactId,
+            support: Number(item.AdditionalContactId),
+            // support: item.AdditionalContactId,
 
             role:
               item.AdditionalSupportRole
@@ -338,6 +337,33 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
       setGeneratedSiteId(siteId);
     }
   };
+  const loadSiteAdditionalSupport = async (
+    siteId: number
+  ): Promise<void> => {
+    const items = await spService.getItems(
+      "SiteAdditionalSupport",
+      [
+        "Id",
+        "AdditionalContactId",
+        "AdditionalSupportRole"
+      ],
+      `SiteIDId eq ${siteId}`
+    );
+    if (items.length === 0) {
+      return;
+    }
+
+
+
+    setSupportRows(
+      items.map((item: any) => ({
+        id: item.Id,
+        support: Number(item.AdditionalContactId),
+        //support: item.AdditionalContactId?.toString(),
+        role: item.AdditionalSupportRole
+      }))
+    );
+  };
 
 
 
@@ -365,13 +391,13 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
     }
 
     if (item.SiteUpdateOwner?.length > 0) {
-  setDefaultSiteUpdateOwner([
-    item.SiteUpdateOwner[0].EMail
-  ]);
-  setSiteUpdateOwner(
-    item.SiteUpdateOwner
-  );
-}
+      setDefaultSiteUpdateOwner([
+        item.SiteUpdateOwner[0].EMail
+      ]);
+      setSiteUpdateOwner(
+        item.SiteUpdateOwner
+      );
+    }
 
 
     setIsProcessed(
@@ -430,22 +456,25 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
 
     });
 
-    await loadAdditionalSupport(id);
-
     if (
       item.IsCreated === true &&
       item.IsApproved === "Approved"
     ) {
 
-      // Approved → show created site's ID
       setGeneratedSiteId(
         item.RSRSSiteId?.Title || ""
       );
+      if (item.RSRSSiteIdId) {
+        await loadSiteAdditionalSupport(
+          item.RSRSSiteIdId
+        );
 
-    }
-    else {
+      }
 
-      // Pending + Rejected → show current SiteType counter
+    } else {
+
+      await loadAdditionalSupport(id);
+
       if (item.Site_Type) {
 
         await getSiteIdDetails(
@@ -573,9 +602,6 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
           "NewSiteRequest",
           Number(requestId)
         );
-      console.log(request, "requestrequestrequest");
-
-
       const siteTypeText =
         siteTypeOptions.find(
           x => x.key === data.siteType
@@ -635,9 +661,6 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
             data.siteSupport[0].loginName || data.siteSupport[0].EMail
           )
           : null;
-      console.log(siteSupportUser, "siteSupportUsersiteSupportUser");
-
-
 
       const siteUpdateOwnerUser =
         data.siteUpdateOwner?.length > 0
@@ -754,28 +777,22 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
           sitePayload
         );
 
-      // Copy additional support
+      for (const row of supportRows) {
 
-      const supports =
-        await spService.getItems(
-          "AdditionalSupport",
-          ["*"],
-          `SiteRequestIdId eq ${requestId}`
-        );
+        if (row.support && row.role) {
 
-      for (const support of supports) {
+          await spService.createItem(
+            "SiteAdditionalSupport",
+            {
+              SiteIDId: site.Id,
+              AdditionalContactId: row.support,
+              AdditionalSupportRole: row.role,
+              IsActive: "true"
+            }
+          );
 
-        await spService.createItem(
-          "SiteAdditionalSupport",
-          {
-            SiteIDId: site.Id,
-            AdditionalContactId:
-              support.AdditionalContactId,
-            AdditionalSupportRole:
-              support.AdditionalSupportRole,
-            IsActive: "true"
-          }
-        );
+        }
+
       }
 
       await spService.updateItem(
@@ -1306,9 +1323,6 @@ setOwnerValidationError(""); */
             ? moment(data.transactionDate).format("MM-DD-YYYY")
             : ""
       };
-      console.log(payload, "ploaadsss");
-
-
       if (siteLeadUser) {
         payload.SiteLeadId = [siteLeadUser.Id];
       }
@@ -1468,48 +1482,48 @@ setOwnerValidationError(""); */
   //   }
 
   // }, [pageMode, requestId]);
-const handleApproveClick = (): void => {
+  const handleApproveClick = (): void => {
 
-  const currentData = watch();
+    const currentData = watch();
 
-  validateUpdateOwnerOrOutsideCounsel(currentData);
+    validateUpdateOwnerOrOutsideCounsel(currentData);
 
-  void handleSubmit(
-    async (data) => {
+    void handleSubmit(
+      async (data) => {
 
-      if (
-        !validateUpdateOwnerOrOutsideCounsel(data)
-      ) {
-        return;
+        if (
+          !validateUpdateOwnerOrOutsideCounsel(data)
+        ) {
+          return;
+        }
+
+        await approveRequest(data);
+
       }
+    )();
 
-      await approveRequest(data);
+  };
+  const handleCreateClick = (): void => {
 
-    }
-  )();
+    const currentData = watch();
 
-};
-const handleCreateClick = (): void => {
+    validateUpdateOwnerOrOutsideCounsel(currentData);
 
-  const currentData = watch();
+    void handleSubmit(
+      async (data) => {
 
-  validateUpdateOwnerOrOutsideCounsel(currentData);
+        if (
+          !validateUpdateOwnerOrOutsideCounsel(data)
+        ) {
+          return;
+        }
 
-  void handleSubmit(
-    async (data) => {
+        await onSubmit(data);
 
-      if (
-        !validateUpdateOwnerOrOutsideCounsel(data)
-      ) {
-        return;
       }
+    )();
 
-      await onSubmit(data);
-
-    }
-  )();
-
-};
+  };
 
 
 
@@ -1615,7 +1629,7 @@ const handleCreateClick = (): void => {
                     <span className={styles.required}>*</span>
                   </td>
                   <td className={styles.fieldCell}>
-                    <TextField value={generatedSiteId} readOnly styles={textFieldStyles}/>
+                    <TextField value={generatedSiteId} readOnly styles={textFieldStyles} />
 
                   </td>
                 </tr>
@@ -1636,7 +1650,7 @@ const handleCreateClick = (): void => {
                     }}
                     render={({ field }) => (
                       <TextField
-                        readOnly ={isReadOnly}
+                        readOnly={isReadOnly}
                         value={field.value}
                         onChange={(_, value) =>
                           field.onChange(value)
@@ -1705,7 +1719,7 @@ const handleCreateClick = (): void => {
                             }}
                           >
                             {errors.siteLead.message}
-                           
+
                           </Text>
                         )}
                       </>
@@ -1735,7 +1749,7 @@ const handleCreateClick = (): void => {
                           field.onChange(items);
                           setSiteSupport(items);
                         }}
-                         styles={peoplepickerstyles}
+                        styles={peoplepickerstyles}
                       />
                     )}
                   />
@@ -1782,7 +1796,7 @@ const handleCreateClick = (): void => {
                               field.onChange(items);
                               setSiteUpdateOwner(items);
                             }}
-                             styles={peoplepickerstyles}
+                            styles={peoplepickerstyles}
                           />
                         </TooltipHost>
                       </>
@@ -2263,7 +2277,7 @@ const handleCreateClick = (): void => {
                           }}
                         >
                           <TextField
-                            readOnly ={isReadOnly}
+                            readOnly={isReadOnly}
                             multiline
                             rows={5}
                             value={field.value}
