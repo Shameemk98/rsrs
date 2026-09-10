@@ -18,6 +18,7 @@ import {
   DialogType,
   DialogFooter
 } from "@fluentui/react";
+import { commonDropdownStyles, customComboBoxStyles, customDropdownStyles, customPickerStyles, formStyles } from '../../../common/styles/controlStyles';
 
 const siteActivityOptions: IDropdownOption[] = [
   { key: "", text: "Select Site Activity" },
@@ -154,6 +155,11 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
 
   const spService = new SpService(props.context);
   const requestId = new URLSearchParams(window.location.search).get("RequestId");
+  const textFieldStyles =  isReadOnly ? formStyles.readOnlyField : formStyles.textField;
+  const multiLineFieldStyles = isReadOnly ? formStyles.readOnlyMultiLineField : formStyles.multilineField;
+  const dropdownStyles =  isReadOnly ? customDropdownStyles : formStyles.dropdown;
+   const comboBoxStyles =  isReadOnly ? customComboBoxStyles : formStyles.comboBox;
+  const peoplepickerstyles=isReadOnly? customPickerStyles:{}
   const navigateToAccessDenied = (): void => {
     window.location.href =
       `${props.context.pageContext.web.absoluteUrl}/SitePages/AccessDenied.aspx`;
@@ -269,7 +275,7 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
       `${props.context.pageContext.web.absoluteUrl}/SitePages/Home.aspx`;
   };
 
-  const loadAdditionalSupport =
+   const loadAdditionalSupport =
     async (
       requestId: number
     ): Promise<void> => {
@@ -359,7 +365,6 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
     }
 
     if (item.SiteUpdateOwner?.length > 0) {
-
   setDefaultSiteUpdateOwner([
     item.SiteUpdateOwner[0].EMail
   ]);
@@ -425,30 +430,31 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
 
     });
 
- await loadAdditionalSupport(id);
+    await loadAdditionalSupport(id);
 
-if (
-  item.IsCreated === true &&
-  item.IsApproved === "Approved"
-) {
+    if (
+      item.IsCreated === true &&
+      item.IsApproved === "Approved"
+    ) {
 
-  // Approved → show created site's ID
-  setGeneratedSiteId(
-    item.RSRSSiteId?.Title || ""
-  );
+      // Approved → show created site's ID
+      setGeneratedSiteId(
+        item.RSRSSiteId?.Title || ""
+      );
 
-}
-else {
+    }
+    else {
 
-  // Pending + Rejected → show current SiteType counter
-  if (item.Site_Type) {
+      // Pending + Rejected → show current SiteType counter
+      if (item.Site_Type) {
 
-    await getSiteIdDetails(
-      item.Site_Type
-    );
-  }
+        await getSiteIdDetails(
+          item.Site_Type
+        );
 
-}
+      }
+
+    }
 
   };
   const navigateToDashboard = (): void => {
@@ -491,7 +497,7 @@ else {
     return items[0];
 
   };
-/*   const validateUpdateOwnerOrOutsideCounselOnly = (): boolean => {
+  const validateUpdateOwnerOrOutsideCounselOnly = (): boolean => {
 
     const hasSiteUpdateOwner =
       siteUpdateOwner?.length > 0;
@@ -518,39 +524,37 @@ else {
     }
 
     return true;
-  }; */
-const validateUpdateOwnerOrOutsideCounsel = (
-  data: IFormData
-): boolean => {
+  };
+  const validateUpdateOwnerOrOutsideCounsel = (
+    data: IFormData
+  ): boolean => {
 
-  const hasSiteUpdateOwner =
-    data.siteUpdateOwner?.length > 0;
 
-  const hasOutsideCounsel =
-    supportRows.some(
-      row =>
-        row.support &&
-        row.role === "Outside Counsel"
-    );
 
-  if (!hasSiteUpdateOwner && !hasOutsideCounsel) {
+    const hasSiteUpdateOwner =
+      data.siteUpdateOwner?.length > 0;
 
-    setMessageType(
-      MessageBarType.error
-    );
+    const hasOutsideCounsel =
+      supportRows.some(
+        row =>
+          row.support &&
+          row.role === "Outside Counsel"
+      );
 
-    setMessage(
-      "Please select either Site Update Owner or at least one Additional Support as Outside Counsel"
-    );
+    if (!hasSiteUpdateOwner && !hasOutsideCounsel) {
 
-    setIsErrorDialog(true);
-    setShowDialog(true);
+      setMessageType(MessageBarType.error);
+      setMessage(
+        "Please select either Site Update Owner or at least one Additional Support as Outside Counsel"
+      );
+      setIsErrorDialog(true);
+      setShowDialog(true);
 
-    return false;
-  }
+      return false;
+    }
 
-  return true;
-};
+    return true;
+  };
 
   const approveRequest = async (
     data: IFormData
@@ -742,7 +746,7 @@ const validateUpdateOwnerOrOutsideCounsel = (
         sitePayload.SiteUpdateOwnerId = [
           siteUpdateOwnerUser.Id
         ];
-      }   
+      }
 
       const site =
         await spService.createItem(
@@ -1437,33 +1441,33 @@ setOwnerValidationError(""); */
 
   }, []);
 
-/*   useEffect(() => {
+  // useEffect(() => {
 
-    if (
-      pageMode === "approval"
-      && requestId
-    ) {
+  //   if (
+  //     pageMode === "approval"
+  //     && requestId
+  //   ) {
 
-      const loadSiteId =
-        async () => {
+  //     const loadSiteId =
+  //       async () => {
 
-          const request =
-            await spService.getItemByIdd(
-              "NewSiteRequest",
-              Number(requestId)
-            );
+  //         const request =
+  //           await spService.getItemByIdd(
+  //             "NewSiteRequest",
+  //             Number(requestId)
+  //           );
 
-          await getSiteIdDetails(
-            request.Site_Type
-          );
+  //         await getSiteIdDetails(
+  //           request.Site_Type
+  //         );
 
-        };
+  //       };
 
-      void loadSiteId();
+  //     void loadSiteId();
 
-    }
+  //   }
 
-  }, [pageMode, requestId]); */
+  // }, [pageMode, requestId]);
 const handleApproveClick = (): void => {
 
   const currentData = watch();
@@ -1515,7 +1519,7 @@ const handleCreateClick = (): void => {
 
   return (
     <>
-     {/*  <RsrsHeader context={props.context} /> */}
+      {/* <RsrsHeader context={props.context} /> */}
       <Dialog
         hidden={!showDialog}
         dialogContentProps={{
@@ -1543,7 +1547,7 @@ const handleCreateClick = (): void => {
           />
         </DialogFooter>
       </Dialog>
-      <section className={styles.requestnewsite}>
+      <section >
         {isSubmitting && (
           <div
             style={{
@@ -1611,7 +1615,7 @@ const handleCreateClick = (): void => {
                     <span className={styles.required}>*</span>
                   </td>
                   <td className={styles.fieldCell}>
-                    <TextField value={generatedSiteId} readOnly />
+                    <TextField value={generatedSiteId} readOnly styles={textFieldStyles}/>
 
                   </td>
                 </tr>
@@ -1632,12 +1636,13 @@ const handleCreateClick = (): void => {
                     }}
                     render={({ field }) => (
                       <TextField
-                        disabled={isReadOnly}
+                        readOnly ={isReadOnly}
                         value={field.value}
                         onChange={(_, value) =>
                           field.onChange(value)
                         }
                         errorMessage={errors.siteName?.message}
+                        styles={textFieldStyles}
                       />
                     )}
                   />
@@ -1650,9 +1655,10 @@ const handleCreateClick = (): void => {
                   </td>
                   <td className={styles.fieldCell}>
                     <TextField
-                      disabled={isReadOnly}
+                      // disabled={isReadOnly}
                       readOnly
                       value={createdBy}
+                      styles={textFieldStyles}
                     />
                   </td>
                 </tr>
@@ -1686,6 +1692,7 @@ const handleCreateClick = (): void => {
                             field.onChange(items);
                             setSiteLead(items);
                           }}
+                          styles={peoplepickerstyles}
                         />
 
                         {errors.siteLead && (
@@ -1698,6 +1705,7 @@ const handleCreateClick = (): void => {
                             }}
                           >
                             {errors.siteLead.message}
+                           
                           </Text>
                         )}
                       </>
@@ -1727,6 +1735,7 @@ const handleCreateClick = (): void => {
                           field.onChange(items);
                           setSiteSupport(items);
                         }}
+                         styles={peoplepickerstyles}
                       />
                     )}
                   />
@@ -1773,6 +1782,7 @@ const handleCreateClick = (): void => {
                               field.onChange(items);
                               setSiteUpdateOwner(items);
                             }}
+                             styles={peoplepickerstyles}
                           />
                         </TooltipHost>
                       </>
@@ -1804,6 +1814,7 @@ const handleCreateClick = (): void => {
                               option?.key
                             )
                           }
+                          styles={dropdownStyles}
                         />
 
                         <Dropdown
@@ -1819,6 +1830,7 @@ const handleCreateClick = (): void => {
                               option?.key
                             )
                           }
+                          styles={dropdownStyles}
                         />
 
                         {index === 0 ? (
@@ -1872,6 +1884,7 @@ const handleCreateClick = (): void => {
                           field.onChange(option?.key)
                         }
                         errorMessage={errors.claimType?.message}
+                        styles={dropdownStyles}
                       />
                     )}
                   />
@@ -1890,11 +1903,12 @@ const handleCreateClick = (): void => {
                     control={control}
                     render={({ field }) => (
                       <TextField
-                        disabled={isReadOnly}
+                        readOnly={isReadOnly}
                         value={field.value}
                         onChange={(_, value) =>
                           field.onChange(value)
                         }
+                        styles={textFieldStyles}
                       />
                     )}
                   />
@@ -1913,11 +1927,12 @@ const handleCreateClick = (): void => {
                     control={control}
                     render={({ field }) => (
                       <TextField
-                        disabled={isReadOnly}
+                        readOnly={isReadOnly}
                         value={field.value}
                         onChange={(_, value) =>
                           field.onChange(value)
                         }
+                        styles={textFieldStyles}
                       />
                     )}
                   />
@@ -1948,6 +1963,7 @@ const handleCreateClick = (): void => {
                           field.onChange(option?.key)
                         }
                         errorMessage={errors.country?.message}
+                        styles={dropdownStyles}
                       />
                     )}
                   />
@@ -1975,6 +1991,7 @@ const handleCreateClick = (): void => {
                           field.onChange(option?.key)
                         }
                         errorMessage={errors.siteType?.message}
+                        styles={dropdownStyles}
                       />
                     )}
                   />
@@ -2002,6 +2019,7 @@ const handleCreateClick = (): void => {
                           field.onChange(option?.key)
                         }
                         errorMessage={errors.siteActivity?.message}
+                        styles={dropdownStyles}
                       />
                     )}
                   />
@@ -2029,6 +2047,7 @@ const handleCreateClick = (): void => {
                           field.onChange(option?.key)
                         }
                         errorMessage={errors.legacyCompany?.message}
+                        styles={dropdownStyles}
                       />
                     )}
                   />
@@ -2068,6 +2087,7 @@ const handleCreateClick = (): void => {
                             errorMessage={
                               errors.obligationType?.message
                             }
+                            styles={dropdownStyles}
                           />
                         )}
                       />
@@ -2106,6 +2126,7 @@ const handleCreateClick = (): void => {
                             errorMessage={
                               errors.operatingGroup?.message
                             }
+                            styles={dropdownStyles}
                           />
                         )}
                       />
@@ -2177,10 +2198,9 @@ const handleCreateClick = (): void => {
                 </td>
                 <td className={styles.fieldCell}>
                   <TextField
-
-                    disabled={true}
                     readOnly
                     value={moment().format("MM-DD-YYYY")}
+                    styles={textFieldStyles}
                   />
                 </td>
               </tr>
@@ -2206,6 +2226,7 @@ const handleCreateClick = (): void => {
                           field.onChange(option?.key)
                         }
                         errorMessage={errors.costEstimateMethod?.message}
+                        styles={dropdownStyles}
                       />
                     )}
                   />
@@ -2242,7 +2263,7 @@ const handleCreateClick = (): void => {
                           }}
                         >
                           <TextField
-                            disabled={isReadOnly}
+                            readOnly ={isReadOnly}
                             multiline
                             rows={5}
                             value={field.value}
@@ -2250,6 +2271,7 @@ const handleCreateClick = (): void => {
                             errorMessage={
                               errors.originalCompanyConnection?.message
                             }
+                            styles={multiLineFieldStyles}
                           />
                         </TooltipHost>
                       </>
