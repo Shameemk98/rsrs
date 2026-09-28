@@ -147,7 +147,7 @@ public async getPagedItems(
       .select('*', 'Author/Id','Author/Title','Author/EMail')
       .expand('Author')();
   }
-    public async getItemByIdd(listTitle: string, id: any): Promise<any> {
+/*     public async getItemByIdd(listTitle: string, id: any): Promise<any> {
     return this.sp.web.lists
       .getByTitle(listTitle)
       .items.getById(id)
@@ -156,7 +156,84 @@ public async getPagedItems(
         'SiteUpdateOwner/Id','SiteUpdateOwner/Title','SiteUpdateOwner/EMail','Author/Title')
       //.select('*', 'SiteLead/Id','SiteLead/Title','SiteSupport/Id','SiteSupport/Title','SiteUpdateOwner/Id','SiteUpdateOwner/Title')
       .expand('SiteLead','SiteSupport','SiteUpdateOwner','Author','RSRSSiteId')();
+  } */
+  
+  public async getItemByIdd(
+  listTitle: string,
+  id: any
+): Promise<any> {
+
+  return this.sp.web.lists
+    .getByTitle(listTitle)
+    .items.getById(id)
+    .select(
+      "*",
+      "RSRSSiteId/Title",
+      "Author/Title"
+    )
+    .expand(
+      "Author",
+      "RSRSSiteId"
+    )();
+
+}
+      public async getRequestByIdSafe(
+  listTitle: string,
+  id: number
+): Promise<any> {
+
+  return await this.sp.web.lists
+    .getByTitle(listTitle)
+    .items
+    .getById(id)
+    .select(
+      "*",
+      "Author/Id",
+      "Author/Title",
+      "RSRSSiteId/Id",
+      "RSRSSiteId/Title"
+    )
+    .expand(
+      "Author",
+      "RSRSSiteId"
+    )();
+
+}
+public async getUserSafe(
+  userId?: number
+): Promise<any | null> {
+
+  if (!userId) {
+    return null;
   }
+
+  try {
+
+    const user =
+      await this.sp.web.siteUsers
+        .getById(userId)
+        .select(
+          "Id",
+          "Title",
+          "Email",
+          "LoginName"
+        )();
+
+    return user;
+
+  }
+  catch (error) {
+
+    console.warn(
+      `User ${userId} not found`,
+      error
+    );
+
+    return null;
+
+  }
+
+}
   private readonly itemSelectFields = [
     "*",
     "SiteLead/Id",

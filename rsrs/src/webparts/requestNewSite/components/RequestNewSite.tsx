@@ -368,13 +368,15 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
 
 
 
-  const loadRequest = async (id: number): Promise<void> => {
+/*   const loadRequest = async (id: number): Promise<void> => {
 
     const item =
       await spService.getItemByIdd(
         "NewSiteRequest",
         id
       );
+      console.log(item,"----------------------");
+      
 
     setCreatedBy(item.Author?.Title || "");
 
@@ -485,11 +487,209 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
 
     }
 
-  };
+  }; */
+
+
   const navigateToDashboard = (): void => {
     window.location.href =
       `${props.context.pageContext.web.absoluteUrl}/SitePages/dashboard.aspx`;
   };
+  const loadRequest = async (
+  id: number
+): Promise<void> => {
+
+  try {
+
+    const item =
+      await spService.getRequestByIdSafe(
+        "NewSiteRequest",
+        id
+      );
+
+    console.log(
+      "Request Item",
+      item
+    );
+
+    setCreatedBy(
+      item.Author?.Title || ""
+    );
+
+    const siteLeadUser =
+      await spService.getUserSafe(
+        item.SiteLeadId
+      );
+      console.log(      "siteLeadUser",      siteLeadUser    );
+
+    const siteSupportUser =
+      await spService.getUserSafe(
+        item.SiteSupportId
+      );
+      console.log(      "siteSupportUser",      siteSupportUser    );
+
+    const siteUpdateOwnerUser =
+      await spService.getUserSafe(
+        item.SiteUpdateOwnerId
+      );
+       console.log(      "siteUpdateOwnerUser",      siteUpdateOwnerUser    );
+
+    if (siteLeadUser?.Email) {
+
+      setDefaultSiteLead([
+        siteLeadUser.Email
+      ]);
+
+    }
+
+    if (siteSupportUser?.Email) {
+
+      setDefaultSiteSupport([
+        siteSupportUser.Email
+      ]);
+
+    }
+
+    if (siteUpdateOwnerUser?.Email) {
+
+      setDefaultSiteUpdateOwner([
+        siteUpdateOwnerUser.Email
+      ]);
+
+      setSiteUpdateOwner([
+        {
+          loginName:
+            siteUpdateOwnerUser.LoginName,
+          secondaryText:
+            siteUpdateOwnerUser.Email
+        }
+      ]);
+
+    }
+
+    setIsProcessed(
+      item.IsCreated === true
+    );
+
+    reset({
+
+      siteLead:
+        siteLeadUser
+          ? [siteLeadUser]
+          : [],
+
+      siteSupport:
+        siteSupportUser
+          ? [siteSupportUser]
+          : [],
+
+      siteUpdateOwner:
+        siteUpdateOwnerUser
+          ? [siteUpdateOwnerUser]
+          : [],
+
+      siteName:
+        item.RSRSSiteName || "",
+
+      city:
+        item.City || "",
+
+      state:
+        item.State || "",
+
+      country:
+        item.Country || "",
+
+      claimType:
+        item.Claim_Type || "",
+
+      siteType:
+        item.Site_Type || "",
+
+      siteActivity:
+        item.Site_Activity || "",
+
+      legacyCompany:
+        item.Legacy_Company || "",
+
+      originalCompanyConnection:
+        item.OriginalCompanyConnection || "",
+
+      costEstimateMethod:
+        item.Cost_Estimate_Method || "",
+
+      obligationType:
+        item.ObligationType || "",
+
+      operatingGroup:
+        item.OperatingGroup || "",
+
+      transactionDate:
+        item.TransactionDate
+          ? new Date(
+              item.TransactionDate
+            )
+          : undefined
+
+    });
+
+    if (
+      item.IsCreated === true &&
+      item.IsApproved === "Approved"
+    ) {
+
+      setGeneratedSiteId(
+        item.RSRSSiteId?.Title || ""
+      );
+
+      if (
+        item.RSRSSiteIdId
+      ) {
+
+        await loadSiteAdditionalSupport(
+          item.RSRSSiteIdId
+        );
+
+      }
+
+    }
+    else {
+
+      await loadAdditionalSupport(id);
+
+      if (
+        item.Site_Type
+      ) {
+
+        await getSiteIdDetails(
+          item.Site_Type
+        );
+
+      }
+
+    }
+
+  }
+  catch (error) {
+
+    console.error(
+      "Error loading request",
+      error
+    );
+
+    setMessageType(
+      MessageBarType.error
+    );
+
+    setMessage(
+      "Unable to load request."
+    );
+
+    setIsErrorDialog(true);
+    setShowDialog(true);
+
+  }
+
+};
 
 
   const getSiteTypeData = async (
@@ -653,20 +853,18 @@ export default function RequestNewSite(props: IRequestNewSiteProps): React.React
 
       const siteLeadUser =
         data.siteLead?.length > 0
-          ? await spService.ensureUser(data.siteLead[0].loginName || data.siteLead[0].EMail) : null;
+          ? await spService.ensureUser(data.siteLead[0].loginName || data.siteLead[0].EMail ||data.siteLead[0].Email) : null;
 
       const siteSupportUser =
         data.siteSupport?.length > 0
           ? await spService.ensureUser(
-            data.siteSupport[0].loginName || data.siteSupport[0].EMail
-          )
+            data.siteSupport[0].loginName || data.siteSupport[0].EMail  || data.siteSupport[0].Email )
           : null;
 
       const siteUpdateOwnerUser =
         data.siteUpdateOwner?.length > 0
           ? await spService.ensureUser(
-            data.siteUpdateOwner[0].loginName || data.siteUpdateOwner[0].EMail
-          )
+            data.siteUpdateOwner[0].loginName || data.siteUpdateOwner[0].EMail || data.siteUpdateOwner[0].Email          )
           : null;
 
       const sitePayload: any = {
